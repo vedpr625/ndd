@@ -1,0 +1,1381 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NDD Governance Proposal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout concept: a ledger-style workbench. Left rail for the six registers, a table-first main pane, and a right-hand drawer that carries every governance action. */
+:root{
+  --bg:#F2F6F6; --surface:#FFFFFF; --surface-2:#E8EFEF; --ink:#13262A; --ink-2:#4B6165; --line:#D3DEDF;
+  --accent:#0E6A70; --accent-ink:#FFFFFF; --accent-soft:#DBEEEF;
+  --ok:#1D7448; --ok-ink:#FFFFFF; --ok-bg:#DFF1E7; --warn:#845400; --warn-bg:#FAEDCB; --bad:#9F2430; --bad-bg:#FADFE0; --info:#1E4C9C; --info-bg:#E1EAFA; --muted:#566A6E; --muted-bg:#E3EAEB;
+  --shadow:0 12px 40px rgba(10,30,34,.18);
+  --sans:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1618; --surface:#142124; --surface-2:#1B2C30; --ink:#E4EFEF; --ink-2:#9BB1B4; --line:#263B3F;
+  --accent:#4DC0C6; --accent-ink:#04282B; --accent-soft:#143A3D;
+  --ok:#62D194; --ok-ink:#06281A; --ok-bg:#143626; --warn:#F0C262; --warn-bg:#3A2D10; --bad:#FF8E94; --bad-bg:#401B1F; --info:#93B6FF; --info-bg:#1B2A4A; --muted:#9BB1B4; --muted-bg:#1F3236;
+  --shadow:0 12px 40px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1618; --surface:#142124; --surface-2:#1B2C30; --ink:#E4EFEF; --ink-2:#9BB1B4; --line:#263B3F;
+  --accent:#4DC0C6; --accent-ink:#04282B; --accent-soft:#143A3D;
+  --ok:#62D194; --ok-ink:#06281A; --ok-bg:#143626; --warn:#F0C262; --warn-bg:#3A2D10; --bad:#FF8E94; --bad-bg:#401B1F; --info:#93B6FF; --info-bg:#1B2A4A; --muted:#9BB1B4; --muted-bg:#1F3236;
+  --shadow:0 12px 40px rgba(0,0,0,.5); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;margin:0;padding-inline:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--mono);font-size:12.5px}
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);height:100%}
+.rail{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px 12px;gap:6px;overflow-y:auto}
+.brand{display:flex;gap:10px;align-items:center;padding:4px 8px 14px}
+.brand .mk{width:34px;height:34px;border-radius:8px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:.04em}
+.brand b{display:block;font-size:14px;line-height:1.15}.brand span{font-size:11.5px;color:var(--ink-2)}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;justify-content:space-between;align-items:center;gap:8px;background:none;border:0;border-radius:8px;padding:9px 10px;text-align:left;cursor:pointer;color:var(--ink-2);font-weight:500}
+.nav button:hover{background:var(--surface-2);color:var(--ink)}
+.nav button[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.badge{background:var(--accent);color:var(--accent-ink);border-radius:99px;font-size:11px;font-weight:600;padding:1px 7px;min-width:20px;text-align:center}
+.rail .grow{flex:1}
+.ref{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12px;color:var(--ink-2)}
+.ref b{color:var(--ink);display:flex;align-items:center;gap:6px;font-size:12.5px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
+.pane{display:flex;flex-direction:column;min-width:0;height:100%;overflow:hidden}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.top h1{margin:0;font-size:17px;font-weight:650}
+.top .sub{color:var(--ink-2);font-size:12.5px}
+.who{white-space:nowrap;display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2)}
+.who select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-weight:500}
+.scroll{flex:1;overflow:auto;padding:20px 24px 40px;min-width:0}
+.note{background:var(--info-bg);color:var(--info);border-radius:8px;padding:8px 12px;font-size:12.5px;margin-bottom:16px}
+h2{font-size:15px;margin:0 0 4px;font-weight:650}
+.lede{color:var(--ink-2);margin:0 0 14px;max-width:70ch}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:9px 12px;cursor:pointer;color:var(--ink-2);font-weight:500;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--accent);border-color:var(--accent);font-weight:600}
+.tabs .n{font-size:11px;background:var(--muted-bg);color:var(--muted);border-radius:99px;padding:0 6px;margin-left:4px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar .sp{flex:1}
+input[type=text],input[type=number],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+.bar input[type=text],.bar select{width:auto;min-width:180px}
+textarea{resize:vertical;min-height:64px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:550;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:var(--ok-ink)}
+.btn.bad{color:var(--bad);border-color:var(--bad)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;filter:none}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);background:var(--surface-2);font-weight:600;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr.row{cursor:pointer}
+tbody tr.row:hover td{background:var(--surface-2)}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:2px 9px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.chip.muted{background:var(--muted-bg);color:var(--muted)}.chip.info{background:var(--info-bg);color:var(--info)}.chip.warn{background:var(--warn-bg);color:var(--warn)}.chip.ok{background:var(--ok-bg);color:var(--ok)}.chip.solid{background:var(--ok);color:var(--ok-ink)}.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.sys{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--ink-2);background:var(--surface);white-space:nowrap}
+.kind{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);font-weight:600}
+.dim{color:var(--ink-2)}
+.pip{display:inline-block;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line);font-size:10px;text-align:center;line-height:15px;font-weight:700;color:var(--ink-2);margin-right:3px}
+.pip.on{background:var(--ok);border-color:var(--ok);color:var(--ok-ink)}
+.mine{color:var(--accent);font-weight:600;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card:hover{border-color:var(--accent)}
+.card h3{margin:0;font-size:14px;font-weight:600}
+.card .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.empty{padding:32px;text-align:center;color:var(--ink-2)}
+.drawer-bg{position:fixed;inset:0;background:rgba(5,20,22,.45);z-index:20}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100%);background:var(--surface);z-index:21;box-shadow:var(--shadow);display:flex;flex-direction:column;border-left:1px solid var(--line)}
+.dh{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.dh h3{margin:2px 0 4px;font-size:16px;font-weight:650;overflow-wrap:anywhere}
+.x{background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:var(--ink-2);padding:2px 6px}
+.db{flex:1;overflow:auto;padding:16px 20px 24px;display:flex;flex-direction:column;gap:18px}
+.df{border-top:1px solid var(--line);padding:12px 20px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center;background:var(--surface)}
+.df .why{flex:1;color:var(--ink-2);font-size:12.5px;min-width:200px}
+.sec h4{margin:0 0 8px;font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-2);font-weight:650}
+.kv{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 12px;font-size:13px}
+.kv dt{color:var(--ink-2)}.kv dd{margin:0;overflow-wrap:anywhere}
+.steps{display:flex;gap:0;margin:2px 0}
+.steps li{list-style:none;flex:1;text-align:center;font-size:11px;color:var(--ink-2);position:relative;padding-top:16px}
+.steps li::before{content:"";position:absolute;top:3px;left:0;right:0;height:3px;background:var(--line)}
+.steps li.done::before{background:var(--accent)}
+.steps li.cur{color:var(--accent);font-weight:700}
+.steps li.cur::after{content:"";position:absolute;top:0;left:50%;width:9px;height:9px;margin-left:-4.5px;border-radius:50%;background:var(--accent)}
+.steps{padding:0;margin:0}
+.checks{display:flex;flex-direction:column;gap:6px}
+.ck{display:flex;gap:8px;font-size:13px;align-items:flex-start}
+.ck i{font-style:normal;font-weight:700;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;flex:none;margin-top:1px}
+.ck.ok i{background:var(--ok-bg);color:var(--ok)}.ck.warn i{background:var(--warn-bg);color:var(--warn)}.ck.fail i{background:var(--bad-bg);color:var(--bad)}
+.map{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:10px;align-items:stretch}
+.map .end{border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
+.map .mid{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;font-size:11px;color:var(--ink-2)}
+.thread{display:flex;flex-direction:column;gap:10px}
+.msg{background:var(--surface-2);border-radius:10px;padding:9px 12px;font-size:13px}
+.msg b{font-weight:600}.msg small{color:var(--ink-2);margin-left:6px}
+.fr{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.fr label,.fr .lab{font-weight:600;font-size:12.5px}
+.fr .hint{font-size:12px;color:var(--ink-2)}
+.fr .err{font-size:12px;color:var(--bad);display:none;font-weight:550}
+.fr.bad .err{display:block}.fr.bad input,.fr.bad select,.fr.bad textarea{border-color:var(--bad)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fs{border:1px solid var(--line);border-radius:10px;padding:14px;margin:0 0 14px}
+.fs legend{font-weight:650;padding:0 6px;font-size:13px}
+.choice{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:4px 0}
+.choice input{width:auto;margin-top:3px}
+.res{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.res button{display:flex;gap:10px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:8px 10px;cursor:pointer;align-items:baseline}
+.res button:last-child{border-bottom:0}.res button:hover{background:var(--surface-2)}
+.res button[disabled]{opacity:.55;cursor:not-allowed}
+.picked{border:1px solid var(--accent);background:var(--accent-soft);border-radius:8px;padding:9px 11px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.outcome{border-radius:8px;padding:10px 12px;font-size:13px;background:var(--surface-2)}
+.frac{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;align-items:center;margin:4px 0}
+.frac .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-2);font-weight:650}
+.rule{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;background:var(--surface)}
+.rule .mono{color:var(--accent)}
+.drawer table{min-width:0}.drawer .fs,.drawer .fr,.row2>*{min-width:0}.drawer td,.drawer th{padding:8px 10px}
+.colrow{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,1.3fr) auto auto;gap:6px;align-items:center;margin-bottom:8px}
+.colrow input[type=text],.colrow select{padding:6px 8px}
+@media (max-width:860px){.colrow{grid-template-columns:1fr 1fr}}
+.stage td{vertical-align:middle}
+.rollout table{min-width:0}.rollout td,.rollout th{padding:8px 10px}
+.divider{height:1px;background:var(--line);margin:2px 0}
+pre.code{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;font-family:var(--mono);font-size:12px;line-height:1.5;margin:0;max-height:360px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.two>*{min-width:0}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:99px;z-index:40;font-weight:550;font-size:13px;box-shadow:var(--shadow)}
+.mobile-nav{display:none}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+  .rail{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px 12px;align-items:center}
+  .brand,.ref,.rail .grow{display:none}
+  .nav{flex-direction:row}.nav button{white-space:nowrap}
+  .top,.scroll{padding-inline:16px}
+  .two{grid-template-columns:minmax(0,1fr)}
+  .row2{grid-template-columns:1fr}
+  .kv{grid-template-columns:110px minmax(0,1fr)}
+  .map{grid-template-columns:1fr}.map .mid{flex-direction:row}
+}
+@media (prefers-reduced-motion:no-preference){.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}}
+</style>
+<style>
+/* Proposal skin: keeps the current NDD Governance layout (header, left rail, hero, cards, tabs) and its navy and teal look. */
+:root{
+  --bg:#F3F6FA; --surface:#FFFFFF; --surface-2:#EDF2F7; --ink:#0F2A43; --ink-2:#506579; --line:#DCE4ED;
+  --accent:#0F766E; --accent-ink:#FFFFFF; --accent-soft:#D8F1EE; --navy:#0B3C6E; --navy-ink:#FFFFFF;
+  --mark:#B45309; --mark-ink:#FFFFFF;
+  --sans:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B1624; --surface:#122234; --surface-2:#192E44; --ink:#E6EEF6; --ink-2:#9DB2C6; --line:#243A52;
+  --accent:#4FD1C5; --accent-ink:#042F2E; --accent-soft:#12403F; --navy:#3A7CC0; --navy-ink:#FFFFFF; --mark:#FBBF24; --mark-ink:#1C1100}}
+:root[data-theme="dark"]{
+  --bg:#0B1624; --surface:#122234; --surface-2:#192E44; --ink:#E6EEF6; --ink-2:#9DB2C6; --line:#243A52;
+  --accent:#4FD1C5; --accent-ink:#042F2E; --accent-soft:#12403F; --navy:#3A7CC0; --navy-ink:#FFFFFF; --mark:#FBBF24; --mark-ink:#1C1100}
+.shell{display:flex;flex-direction:column;height:100%}
+.gh{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.gbrand{display:flex;gap:12px;align-items:center}
+.gbrand .mk{width:38px;height:38px;border-radius:50%;background:var(--navy);color:var(--navy-ink);display:grid;place-items:center;font-weight:800;font-size:11px;letter-spacing:.04em}
+.gt{font-weight:800;font-size:17px;display:flex;gap:8px;align-items:center}
+.pill{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:99px;padding:2px 9px}
+.gs{font-size:12px;color:var(--ink-2)}
+.gtools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn.icon{padding:8px 12px}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:var(--navy-ink)}
+.btn[aria-pressed="true"]{background:var(--mark);border-color:var(--mark);color:var(--mark-ink)}
+.gbody{flex:1;display:grid;grid-template-columns:268px minmax(0,1fr);min-height:0}
+.gbody.mini{grid-template-columns:68px minmax(0,1fr)}
+.rail{padding:16px 12px;gap:4px}
+.gl{font-size:11px;letter-spacing:.09em;font-weight:700;color:var(--ink-2);padding:12px 10px 6px}
+.nav button{align-items:center;justify-content:flex-start;gap:12px;padding:9px 10px;position:relative}
+.nav button svg{flex:none}
+.nav .nt{display:flex;flex-direction:column;min-width:0;flex:1;text-align:left}
+.nav .nt b{font-weight:650;font-size:14px;color:var(--ink)}
+.nav .nt small{font-size:11.5px;color:var(--ink-2)}
+.nav button[aria-current="page"]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent);border-radius:10px}
+.nav button[aria-current="page"] .nt b,.nav button[aria-current="page"] svg{color:var(--accent)}
+.ucard{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:12.5px}
+.ucard .urow{display:flex;gap:10px;align-items:center}
+.av{width:36px;height:36px;border-radius:10px;background:var(--navy);color:var(--navy-ink);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.ucard small{color:var(--ink-2);display:block}
+.ucard select{padding:6px 8px;font-size:12.5px}
+.collapse{background:none;border:0;color:var(--ink-2);padding:10px;text-align:left;cursor:pointer;font-weight:600}
+.gbody.mini .nt,.gbody.mini .gl,.gbody.mini .ucard,.gbody.mini .ct,.gbody.mini .badge{display:none}
+.crumb{font-size:12.5px;color:var(--ink-2);margin-bottom:10px}
+.hero{display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 2px rgba(15,42,67,.05)}
+.hicon{width:52px;height:52px;border-radius:14px;background:var(--navy);color:var(--navy-ink);display:grid;place-items:center;flex:none}
+.htxt{flex:1;min-width:220px}.htxt h1{margin:0 0 2px;font-size:22px;font-weight:800}.htxt p{margin:0;color:var(--ink-2);max-width:70ch}
+.hact{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.menuwrap{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 6px);min-width:220px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px;z-index:15;display:flex;flex-direction:column}
+.menu button{background:none;border:0;text-align:left;padding:9px 10px;border-radius:8px;cursor:pointer;font-weight:600}
+.menu button:hover{background:var(--surface-2)}
+.menu small{display:block;color:var(--ink-2);font-weight:400}
+.seg{display:inline-flex;gap:4px;background:var(--surface-2);border-radius:12px;padding:4px;flex-wrap:wrap;margin-bottom:14px}
+.seg button{background:none;border:0;border-radius:9px;padding:8px 14px;cursor:pointer;font-weight:600;color:var(--ink-2)}
+.seg button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg .n{opacity:.8;margin-left:4px;font-weight:500}
+.card{border-radius:14px;box-shadow:0 1px 2px rgba(15,42,67,.06);padding:16px;gap:10px}
+.card.static{cursor:default}.card.static:hover{border-color:var(--line)}
+.cardtop{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.codechip{font-family:var(--mono);font-size:12px;font-weight:500;background:var(--accent-soft);color:var(--accent);border-radius:7px;padding:3px 9px;overflow-wrap:anywhere}
+.mapbox{background:var(--surface-2);border-radius:10px;padding:10px 12px;font-size:13px;display:flex;flex-direction:column;gap:3px}
+.mapbox .ml{font-size:10.5px;letter-spacing:.09em;font-weight:700;color:var(--ink-2)}
+.cardfoot{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;color:var(--ink-2);margin-top:auto;flex-wrap:wrap}
+.refbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:14px}
+.refbar .sp{flex:1}
+.note{border-radius:10px;margin:0 0 14px}
+.annot [data-chg]{position:relative;outline:2px dashed var(--mark);outline-offset:3px}
+.annot [data-chg]::before{content:attr(data-chg);position:absolute;top:-12px;left:-12px;min-width:22px;height:22px;border-radius:99px;background:var(--mark);color:var(--mark-ink);font:700 12px/22px var(--sans);text-align:center;z-index:25;padding:0 5px}
+#legend{position:fixed;left:16px;bottom:16px;width:min(400px,calc(100% - 32px));max-height:64vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);z-index:30;padding:12px 14px}
+#legend h2{display:flex;justify-content:space-between;align-items:center}
+#legend ol{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+#legend li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;font-size:12.5px}
+#legend .num{width:22px;height:22px;border-radius:99px;background:var(--mark);color:var(--mark-ink);font-weight:700;display:grid;place-items:center;font-size:12px}
+#legend .ba{display:flex;gap:6px}#legend .ba span{font-weight:700;color:var(--ink-2);min-width:44px}
+#legend .why{color:var(--ink-2);margin-top:2px}
+@media (max-width:860px){
+  .gbody,.gbody.mini{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+  .rail{flex-direction:row;overflow-x:auto;padding:8px 12px;border-right:0;border-bottom:1px solid var(--line)}
+  .rail .grow,.ucard,.collapse,.gl{display:none}
+  .nav{flex-direction:row}.nav button{white-space:nowrap}.nav .nt small{display:none}
+  .gh{padding-inline:16px}
+}
+</style>
+
+<style>
+/* closer to V2.4: larger type, two-column cards, centred form pop-up */
+body{font-size:15px}
+.grid{grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:18px}
+.card h3{font-size:19px}
+.card{padding:20px;border-radius:18px}
+.drawer.modal{top:50%;left:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:min(780px,calc(100% - 32px));max-height:calc(100% - 48px);border-radius:20px;border:0;animation:none}
+.tools{position:fixed;right:16px;bottom:16px;z-index:12;display:flex;gap:8px;align-items:center;background:var(--surface);border:1px dashed var(--mark);border-radius:14px;padding:8px 10px;box-shadow:var(--shadow)}
+.tools .who{margin:0}.tools small{color:var(--ink-2);font-weight:700;letter-spacing:.06em}
+.signout{background:#FDECEF;color:#B4233A;border:1px solid #F6C9D1;border-radius:10px;padding:9px;font-weight:600;cursor:default;width:100%}
+.gh .mk{background:#fff;color:var(--navy);border:2px solid var(--navy)}
+.note{display:none}
+.bar>[data-new]{display:none}
+.menu[hidden],.tools [hidden],#legend[hidden]{display:none}
+@media (max-width:560px){.grid{grid-template-columns:1fr}.tools{left:16px;flex-wrap:wrap}}
+</style>
+<div class="shell">
+ <header class="gh">
+  <div class="gbrand"><div class="mk" aria-hidden="true">NDD</div><div><div class="gt">NDD Governance <span class="pill">V2.5 proposal</span></div><div class="gs">National Data Dictionary &amp; KPI Workflow</div></div></div>
+  <div class="gtools"><button class="btn icon" id="theme" aria-label="Switch light or dark">Theme</button></div>
+ </header>
+ <div class="gbody" id="gbody">
+  <aside class="rail" aria-label="Registers">
+   <nav class="nav" id="nav"></nav>
+   <div class="grow"></div>
+   <div class="ucard" id="ucard"></div>
+   <button class="collapse" id="collapse" aria-label="Collapse sidebar"><span class="ct">Collapse sidebar</span></button>
+  </aside>
+  <main class="pane"><div class="scroll" id="main"></div></main>
+ </div>
+</div>
+<div class="tools"><small>MOCKUP</small><label class="who">Programme <select id="prog" aria-label="Programme"></select></label><label class="who">Open form <select id="formsel" aria-label="Open an add form"><option value="">Choose…</option><option value="code">New local code</option><option value="vs">New ValueSet</option><option value="cs">New code system</option><option value="kpi">New KPI</option><option value="el">New data element</option><option value="ds">New schema</option></select></label><button class="btn" id="annot" aria-pressed="false">Show what changed</button></div>
+<aside id="legend" hidden aria-label="What changed"></aside>
+<div id="layer"></div>
+
+<script>
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date().toISOString().slice(0,10);
+
+/* ---------- people ---------- */
+const PEOPLE={
+  requester:{name:'Nimal Fernando',role:'Requester',author:true},
+  specialist:{name:'Kasun Jayawardena',role:'Terminology Specialist',author:true},
+  steward:{name:'Dr. Anjali Perera',role:'Data steward',slot:'steward'},
+  owner:{name:'Dr. Ruwan Silva',role:'Programme owner',slot:'owner'},
+  admin:{name:'System administrator',role:'System administrator',release:true}
+};
+
+const PATTERN={cadence:'Computed from the warehouse on a cadence',aggregate:'Aggregates reported by point-of-service apps',event:'Near-real-time event monitoring'};
+const PERIOD={Monthly:'Monthly',Quarterly:'Quarterly',Annually:'Yearly'};
+const EL2COL={code:['string'],date:['date'],dateTime:['datetime'],boolean:['boolean'],integer:['integer'],decimal:['decimal'],string:['string']};
+const COLT=['string','integer','decimal','date','datetime','boolean'];
+const PROGS={BC:{name:'Breast cancer'},DEN:{name:'Dengue'}};
+const progName=p=>p==='*'?'Shared':(PROGS[p]?PROGS[p].name:p);
+/* ---------- reference terminology (mock of the country server) ---------- */
+const SYS={
+  snomed:{label:'SNOMED CT (GPS)',short:'SNOMED',uri:'http://snomed.info/sct',ver:'GPS release (sample)',note:'Flat lookup only. No hierarchy or ECL.'},
+  icd10:{label:'ICD-10',short:'ICD-10',uri:'http://hl7.org/fhir/sid/icd-10',ver:'ICD-10 (sample)'},
+  loinc:{label:'LOINC',short:'LOINC',uri:'http://loinc.org',ver:'LOINC (sample)'},
+  rxnorm:{label:'RxNorm',short:'RxNorm',uri:'http://www.nlm.nih.gov/research/umls/rxnorm',ver:'RxNorm (sample)'}
+};
+const REF=[
+  ['snomed','254837009','Malignant neoplasm of breast',1],['snomed','122548005','Biopsy of breast',1],['snomed','44578009','Core needle biopsy of breast',1],
+  ['snomed','434363004','Human epidermal growth factor receptor 2 gene detection by fluorescence in situ hybridisation',1],['snomed','433114000','Human epidermal growth factor receptor 2 gene detection by immunohistochemistry',1],
+  ['snomed','367336001','Chemotherapy',1],['snomed','241055006','Mammogram - symptomatic',0],
+  ['snomed','38362002','Dengue',1],['icd10','A90','Dengue fever [classical dengue]',1],['icd10','A91','Dengue haemorrhagic fever',1],['icd10','C50.9','Malignant neoplasm of breast, unspecified',1],['icd10','C50.1','Malignant neoplasm of central portion of breast',1],
+  ['icd10','C50.4','Malignant neoplasm of upper-outer quadrant of breast',1],['icd10','D05.1','Intraductal carcinoma in situ',1],
+  ['icd10','N63','Unspecified lump in breast',1],['icd10','Z51.1','Chemotherapy session for neoplasm',1],
+  ['loinc','85319-2','HER2 Ag [Presence] in Breast cancer specimen by Immune stain',1],['loinc','85337-4','Estrogen receptor Ag [Presence] in Breast cancer specimen by Immune stain',1],
+  ['loinc','85339-0','Progesterone receptor Ag [Presence] in Breast cancer specimen by Immune stain',1],['loinc','21908-9','Stage group.clinical Cancer',1],
+  ['rxnorm','198240','tamoxifen 10 MG Oral Tablet',1],['rxnorm','310261','exemestane 25 MG Oral Tablet',1],['rxnorm','200064','letrozole 2.5 MG Oral Tablet',1],['rxnorm','199224','anastrozole 1 MG Oral Tablet',1],['rxnorm','727762','5 ML fulvestrant 50 MG/ML Prefilled Syringe',1]
+].map(([sys,code,display,active])=>({sys,code,display,active:!!active}));
+const lookup=(sys,code)=>REF.find(r=>r.sys===sys&&r.code===code);
+
+const EQUIV={
+  equal:{l:'Equal',d:'Same meaning',auto:true},
+  wider:{l:'Wider',d:'Standard code is broader than the local code',auto:true},
+  narrower:{l:'Narrower',d:'Standard code is more specific than the local code',auto:false},
+  inexact:{l:'Inexact',d:'Overlaps, but neither contains the other',auto:false}
+};
+const STATUS={draft:['Draft','muted'],submitted:['Submitted','info'],in_review:['In review','info'],changes:['Changes requested','warn'],approved:['Approved','ok'],published:['Published','solid'],retired:['Retired','muted']};
+const FLOW=['draft','submitted','in_review','approved','published'];
+const FLOWL={draft:'Proposal',submitted:'PR opened',in_review:'Review',approved:'Approved',published:'Merged and tagged'};
+const RESL={Condition:'Diagnosis',Procedure:'Procedure',Observation:'Lab test or observation',Medication:'Medication',MedicationRequest:'Medication',Encounter:'Encounter or visit',Immunization:'Immunisation'};
+const SRCT=[['csv','CSV or spreadsheet column'],['sql','SQL table or dump column'],['fhir','FHIR resource'],['other','Other, such as an API or form']];
+const srcLabel=e=>(e.src&&e.src.length?e.src:['fhir']).map(k=>(SRCT.find(x=>x[0]===k)||[0,k])[1]).join(', ');
+const fhirTxt=e=>e.path?e.path:'Not mapped to FHIR';
+const NDD_BASE='https://ndd.example/fhir';
+const fhirId=id=>String(id||'').toLowerCase().replace(/_/g,'-');
+const csUrl=id=>NDD_BASE+'/CodeSystem/'+fhirId(id);
+const vsUrl=id=>NDD_BASE+'/ValueSet/'+fhirId(id);
+const STYPES=[['his','Hospital or clinic system'],['lis','Laboratory system'],['pharm','Pharmacy or stock system'],['reg','Registry or surveillance form'],['other','Other']];
+const pinsText=ms=>{const sy=[...new Set(ms.filter(m=>m[0]!=='local').map(m=>m[0]))];const loc=ms.some(m=>m[0]==='local');return (sy.length?sy.map(k=>esc(SYS[k].short)+' · '+esc(SYS[k].ver)).join('<br>'):'<span class="dim">No standard systems</span>')+(loc?'<br><span class="dim">Local codes from their local code systems</span>':'')};
+const UNITS={'%':['Percentage',100],'per 1,000':['Per 1,000',1000],'per 100,000':['Per 100,000',100000],'count':['Number',1]};
+const DIMROLE={year:'Period',district:'Org unit',age_band:'Category',sex:'Category'};
+const kShort=k=>k.short||(k.title||'').slice(0,50);
+const kDec=k=>k.dec!=null&&k.dec!==''?+k.dec:(k.unit==='%'?1:0);
+function d2rows(k){
+  const code=k.id||'NDD-XX-000',key=code.replace(/-/g,'_'),u=UNITS[k.unit]||UNITS['%'],ev=k.pattern==='event';
+  const cats=(k.dims||[]).filter(d=>DIMROLE[d]==='Category').map(d=>dimLabel[d]);
+  const per=PERIOD[k.cad]||k.cad,pr=(PROGS[k.prog]||{}).name||'Programme';
+  const R=[['Code',`<span class="mono">${esc(code)}</span>`],['Name',esc(k.title||'')],['Short name',esc(kShort(k))+` <span class="dim">(${kShort(k).length} of 50)</span>`]];
+  if(ev){R.push(['DHIS2 object','Program indicator'],['Analytics type','Event, counted per period'],['Aggregation','Count'],['Rule','Events that match the numerator rule, out of events that match the denominator rule']);}
+  else{R.push(['DHIS2 object','Indicator'],['Indicator type',esc(u[0])+` <span class="dim">(factor ${u[1].toLocaleString('en')})</span>`],['Numerator',`aggregate data element <span class="mono">${key}_NUM</span>`],['Denominator',k.unit==='count'?'1':`aggregate data element <span class="mono">${key}_DEN</span>`],['Decimals',String(kDec(k))]);}
+  R.push(['Period',esc(per)],['Org unit level',esc(k.org||'District')+' and above, from the facility registry'],['Categories',cats.length?esc(cats.join(', ')):'None'],['Indicator group',esc(pr)]);
+  return R;
+}
+const d2html=k=>`<dl class="kv">${d2rows(k).map(r=>`<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('')}</dl>`;
+function d2form(){
+  const dims=Object.keys(dimLabel).filter(d=>val('g-d-'+d));
+  const p=val('g-prog'),n=DB.kpi.filter(x=>x.prog===p).length+1;
+  const k=GF.edit?find('kpi',GF.edit):null;
+  return {id:k?k.id:'NDD-'+(p||'XX')+'-'+String(n).padStart(3,'0'),title:val('g-title'),short:val('g-short'),unit:val('g-unit'),dec:val('g-dec'),cad:val('g-cad'),pattern:val('g-pat'),org:val('g-org'),dims,prog:p};
+}
+function d2update(){const e=document.getElementById('d2prev');if(e&&GF&&GF.kind==='kpi')e.innerHTML=d2html(d2form())}
+const FOLDER={code:'mappings',vs:'valuesets',cs:'code_systems',kpi:'kpis',el:'data_elements',ds:'schemas'};
+function gitInfo(it){
+  let h=0;for(const ch of it.id+it.version)h=(h*31+ch.charCodeAt(0))%900;const pr=100+h;
+  const br='ndd/'+FOLDER[it.kind]+'/'+it.id.toLowerCase()+'-v'+it.version;
+  const file='ndd/'+FOLDER[it.kind]+'/'+it.id+'.yaml';
+  const st={draft:['No pull request yet','muted'],submitted:['PR #'+pr+' open, waiting for a reviewer','info'],in_review:['PR #'+pr+' open, in review','info'],changes:['PR #'+pr+' open, changes requested','warn'],approved:['PR #'+pr+' approved, ready to merge','ok'],published:['PR #'+pr+' merged and tagged','solid'],retired:['Retired in a merged PR','muted']}[it.status];
+  return {pr,br,file,st};
+}
+
+/* ---------- data (breast cancer demo) ---------- */
+const stew='Dr. Anjali Perera',own='Dr. Ruwan Silva';
+const mk=(o)=>Object.assign({appr:{steward:null,owner:null},thread:[],version:'0.1.0',by:'requester',summary:'',prog:'BC'},o);
+const DB={
+ ds:[
+  mk({id:'bc_case_mart',prog:'BC',title:'Breast cancer case mart',layer:'mart',grain:'One row per patient diagnosis',status:'published',version:'1.0.0',by:'specialist',appr:{steward:stew,owner:own},cert:true,cols:[
+   {name:'case_key',type:'string',el:'',key:true,note:''},{name:'diagnosis_code',type:'string',el:'diagnosis_code'},{name:'diagnosis_date',type:'date',el:'diagnosis_date'},{name:'stage_group',type:'string',el:'stage_group'},{name:'death_date',type:'datetime',el:'death_date'},{name:'age_band',type:'string',el:'',note:'Derived from birth date'},{name:'org_unit',type:'string',el:'',note:'From the facility registry'}]}),
+  mk({id:'den_case_mart',prog:'DEN',title:'Dengue case mart',layer:'mart',grain:'One row per notified case',status:'in_review',version:'0.2.0',by:'specialist',appr:{steward:stew,owner:null},cert:false,cols:[
+   {name:'case_key',type:'string',el:'',key:true},{name:'dengue_case',type:'string',el:'dengue_case'},{name:'notified_on',type:'date',el:'',note:'Notification date'},{name:'org_unit',type:'string',el:'',note:'From the facility registry'}]})
+ ],
+ cs:[
+  mk({id:'HOSP_BC_01',stype:'his',title:'Breast clinic local codes (demo)',owner:'Breast clinic data office',desc:'Diagnosis, procedure, lab and drug codes used in the demo breast clinic system.',status:'published',version:'1.0.0',by:'specialist',appr:{steward:stew,owner:own}}),
+  mk({id:'LAB_LK_01',stype:'lis',prog:'*',title:'Lab local codes (demo)',owner:'Central laboratory',desc:'Test codes from the laboratory information system.',status:'submitted',by:'specialist'}),
+  mk({id:'DENGUE_NOTIF_01',stype:'reg',prog:'DEN',title:'Dengue notification form codes (demo)',owner:'Epidemiology Unit',desc:'Case classification and lab codes used on the dengue notification form.',status:'published',version:'1.0.0',by:'specialist',appr:{steward:stew,owner:own}})
+ ],
+ code:[
+  mk({id:'HBC-DX-01',system:'HOSP_BC_01',display:'Breast carcinoma, NOS',res:'Condition',target:{sys:'icd10',code:'C50.9'},equiv:'equal',clin:true,status:'submitted',summary:'New mapping for the clinic diagnosis code.',rationale:'Clinic uses this code when site is not recorded.',thread:[{who:'Nimal Fernando',role:'Requester',t:'2 days ago',text:'Submitted. Flagged for clinician review because site is not recorded.'}]}),
+  mk({id:'HBC-PR-01',system:'HOSP_BC_01',display:'Breast biopsy',res:'Procedure',target:{sys:'snomed',code:'122548005'},equiv:'equal',status:'in_review',by:'specialist',appr:{steward:null,owner:own},summary:'Map biopsy procedure to SNOMED GPS.',rationale:'Same procedure; confirmed against clinic procedure list.'}),
+  mk({id:'HBC-LAB-01',system:'HOSP_BC_01',display:'HER2 immunostain',res:'Observation',target:{sys:'loinc',code:'85319-2'},equiv:'equal',status:'approved',by:'specialist',appr:{steward:stew,owner:own},version:'0.2.0',summary:'Receptor test mapping.',rationale:'Direct LOINC match for HER2 immunostain.'}),
+  mk({id:'HBC-LAB-02',system:'HOSP_BC_01',display:'ER immunostain',res:'Observation',target:{sys:'loinc',code:'85337-4'},equiv:'equal',status:'published',by:'specialist',appr:{steward:stew,owner:own},version:'1.0.0',rationale:'Direct LOINC match.'}),
+  mk({id:'HBC-LAB-03',system:'HOSP_BC_01',display:'PR immunostain',res:'Observation',target:{sys:'loinc',code:'85339-0'},equiv:'equal',status:'published',by:'specialist',appr:{steward:stew,owner:own},version:'1.0.0',rationale:'Direct LOINC match.'}),
+  mk({id:'HBC-ST-01',system:'HOSP_BC_01',display:'Stage group (clinical)',res:'Observation',target:{sys:'loinc',code:'21908-9'},equiv:'equal',status:'published',by:'specialist',appr:{steward:stew,owner:own},version:'1.0.0',rationale:'Direct LOINC match.'}),
+  mk({id:'HBC-STG-00',system:'HOSP_BC_01',display:'Stage 0',res:'Observation',target:null,equiv:null,status:'published',by:'specialist',appr:{steward:stew,owner:own},version:'1.0.0',seen:'Value of HBC-ST-01'}),
+  mk({id:'HBC-STG-01',system:'HOSP_BC_01',display:'Stage I',res:'Observation',target:null,equiv:null,status:'published',by:'specialist',appr:{steward:stew,owner:own},version:'1.0.0',seen:'Value of HBC-ST-01'}),
+  mk({id:'HBC-STG-02',system:'HOSP_BC_01',display:'Stage II',res:'Observation',target:null,equiv:null,status:'published',by:'specialist',appr:{steward:stew,owner:own},version:'1.0.0',seen:'Value of HBC-ST-01'}),
+  mk({id:'HBC-STG-03',system:'HOSP_BC_01',display:'Stage III',res:'Observation',target:null,equiv:null,status:'published',by:'specialist',appr:{steward:stew,owner:own},version:'1.0.0',seen:'Value of HBC-ST-01'}),
+  mk({id:'HBC-STG-04',system:'HOSP_BC_01',display:'Stage IV',res:'Observation',target:null,equiv:null,status:'published',by:'specialist',appr:{steward:stew,owner:own},version:'1.0.0',seen:'Value of HBC-ST-01'}),
+  mk({id:'HBC-RX-01',system:'HOSP_BC_01',display:'Tamoxifen tablet',res:'Medication',target:{sys:'rxnorm',code:'198240'},equiv:'equal',status:'changes',summary:'Map tamoxifen to RxNorm.',rationale:'Same drug.',thread:[{who:'Dr. Anjali Perera',role:'Data steward',t:'1 day ago',text:'The local code covers 10 mg and 20 mg tablets, but this RxNorm code is one strength. Split the local code or map to the ingredient and mark it wider.'}]}),
+  mk({id:'HBC-CH-01',system:'HOSP_BC_01',display:'Chemotherapy session',res:'Procedure',target:{sys:'snomed',code:'367336001'},equiv:'inexact',status:'submitted',by:'specialist',summary:'Chemotherapy session to SNOMED chemotherapy.',rationale:'Local code counts a visit, SNOMED code names the treatment.',clin:true}),
+  mk({id:'HBC-RX-09',system:'HOSP_BC_01',display:'Hormone therapy, other',res:'Medication',target:null,equiv:null,status:'draft',seen:'Seen in ETL run of 04 Oct'}),
+  mk({id:'HBC-DX-07',system:'HOSP_BC_01',display:'Breast lump, unconfirmed',res:'Condition',target:null,equiv:null,status:'draft',seen:'Seen in ETL run of 04 Oct'})
+  ,mk({id:'DEN-DX-01',prog:'DEN',system:'DENGUE_NOTIF_01',display:'Dengue fever, clinical',res:'Condition',target:{sys:'icd10',code:'A90'},equiv:'equal',status:'published',by:'specialist',appr:{steward:stew,owner:own},version:'1.0.0',rationale:'Same classification.'}),
+  mk({id:'DEN-DX-02',prog:'DEN',system:'DENGUE_NOTIF_01',display:'Dengue haemorrhagic fever',res:'Condition',target:{sys:'icd10',code:'A91'},equiv:'equal',status:'approved',by:'specialist',appr:{steward:stew,owner:own},version:'0.2.0',rationale:'Same classification.'}),
+  mk({id:'DEN-LAB-01',prog:'DEN',system:'DENGUE_NOTIF_01',display:'NS1 antigen rapid test',res:'Observation',target:null,equiv:null,status:'draft',seen:'Seen in ETL run of 05 Oct'})
+ ],
+ vs:[
+  mk({id:'bc-diagnosis',title:'Breast cancer diagnosis',status:'published',by:'specialist',appr:{steward:stew,owner:own},version:'1.0.0',members:[['icd10','C50.9'],['snomed','254837009']]}),
+  mk({id:'bc-biopsy',title:'Breast biopsy',status:'published',by:'specialist',appr:{steward:stew,owner:own},version:'1.0.0',members:[['snomed','122548005']]}),
+  mk({id:'bc-her2-test',title:'HER2 test',status:'approved',by:'specialist',appr:{steward:stew,owner:own},version:'0.2.0',members:[['snomed','434363004'],['snomed','433114000']]}),
+  mk({id:'bc-chemo-procedure',title:'Chemotherapy procedure',status:'submitted',summary:'Chemotherapy procedure codes for the coverage KPI.',members:[['snomed','367336001'],['local','HBC-CH-01']]}),
+  mk({id:'bc-chemo-drugs',title:'Cytotoxic chemotherapy medicines',status:'draft',members:[],note:'Waiting for the clinician drug list.'}),
+  mk({id:'bc-hormone-drugs',title:'Hormone therapy medicines',status:'in_review',by:'specialist',appr:{steward:stew,owner:null},members:[['rxnorm','198240'],['rxnorm','310261'],['rxnorm','200064'],['rxnorm','199224'],['rxnorm','727762']],summary:'Five endocrine drugs from the RxNorm Medication resources.'}),
+  mk({id:'bc-stage-group-observation',title:'Stage group observation',status:'published',by:'specialist',appr:{steward:stew,owner:own},version:'1.0.0',members:[['loinc','21908-9'],['local','HBC-ST-01']]}),
+  mk({id:'bc-stage-any',title:'Stage recorded (any group)',status:'published',by:'specialist',appr:{steward:stew,owner:own},version:'1.0.0',members:[['local','HBC-STG-00'],['local','HBC-STG-01'],['local','HBC-STG-02'],['local','HBC-STG-03'],['local','HBC-STG-04']]}),
+  mk({id:'bc-stage-early',title:'Early stage',status:'changes',members:[['local','HBC-STG-00'],['local','HBC-STG-01'],['local','HBC-STG-02']],note:'Early stage definition is still open.',thread:[{who:'Dr. Ruwan Silva',role:'Programme owner',t:'3 days ago',text:'Hold until the clinical group confirms which stage groups count as early. Do not publish stage II until then.'}]})
+  ,mk({id:'den-diagnosis',prog:'DEN',title:'Dengue case',status:'approved',by:'specialist',appr:{steward:stew,owner:own},version:'0.2.0',members:[['icd10','A90'],['icd10','A91'],['snomed','38362002'],['local','DEN-DX-01'],['local','DEN-DX-02']]}),
+  mk({id:'den-lab-tested',prog:'DEN',title:'Dengue laboratory test',status:'draft',members:[['local','DEN-LAB-01']]})
+ ],
+ kpi:[
+  mk({id:'NDD-BC-001',title:'Biopsy confirmation',unit:'%',definition:'Share of breast cancer patients with a recorded breast biopsy.',denom:'vs:bc-diagnosis',numer:'vs:bc-biopsy',win:'none',dims:['year','age_band'],cad:'Annually',sup:5,status:'published',version:'1.0.0',by:'specialist',appr:{steward:stew,owner:own}}),
+  mk({id:'NDD-BC-002',title:'HER2 testing',unit:'%',definition:'Share of breast cancer patients with a recorded HER2 test.',denom:'vs:bc-diagnosis',numer:'vs:bc-her2-test',win:'none',dims:['year','age_band'],cad:'Annually',sup:5,status:'approved',version:'0.3.0',by:'specialist',appr:{steward:stew,owner:own}}),
+  mk({id:'NDD-BC-003',title:'Chemotherapy coverage',unit:'%',definition:'Share of breast cancer patients who received a chemotherapy procedure.',denom:'vs:bc-diagnosis',numer:'vs:bc-chemo-procedure',win:'none',dims:['year','age_band'],cad:'Annually',sup:5,status:'in_review',appr:{steward:null,owner:own}}),
+  mk({id:'NDD-BC-004',title:'Endocrine therapy coverage',unit:'%',definition:'Share of breast cancer patients with a hormone therapy medicine on record.',denom:'vs:bc-diagnosis',numer:'vs:bc-hormone-drugs',win:'none',dims:['year','age_band'],cad:'Annually',sup:5,status:'draft',version:'0.2.0',extra:'Hormone drugs sit in separate Medication resources. Counting by text match undercounts, so the rule uses the RxNorm ValueSet.'}),
+  mk({id:'NDD-BC-005',title:'Case fatality (cohort)',unit:'%',definition:'Share of breast cancer patients with a recorded date of death.',denom:'vs:bc-diagnosis',numer:'el:death_date',win:'none',dims:['year','age_band'],cad:'Annually',sup:5,status:'changes',thread:[{who:'Dr. Anjali Perera',role:'Data steward',t:'2 days ago',text:'Add a time bound, for example 5-year case fatality. Without one, the value depends on how long ago each patient was diagnosed.'}]}),
+  mk({id:'NDD-BC-006',title:'Early-stage proportion',unit:'%',definition:'Share of patients with a recorded stage who were diagnosed at an early stage.',denom:'vs:bc-stage-any',numer:'vs:bc-stage-early',win:'none',dims:['year','age_band'],cad:'Annually',sup:5,status:'draft'})
+  ,mk({id:'NDD-DEN-001',prog:'DEN',title:'Laboratory testing of dengue cases',unit:'%',definition:'Share of dengue cases that had a laboratory test recorded.',denom:'vs:den-diagnosis',numer:'vs:den-lab-tested',win:'none',dims:['year','district'],cad:'Monthly',sup:5,status:'draft'})
+ ],
+ el:[
+  mk({id:'diagnosis_code',title:'Breast cancer diagnosis',def:'Coded diagnosis for the patient\'s breast cancer.',type:'code',card:'1..1',res:'Condition',path:'Condition.code',vs:'bc-diagnosis',strength:'required',nulls:['unknown'],sens:'Clinical',status:'published',version:'1.0.0',by:'specialist',appr:{steward:stew,owner:own}}),
+  mk({id:'diagnosis_date',title:'Diagnosis date',def:'Date the diagnosis was first recorded.',type:'date',card:'1..1',res:'Condition',path:'Condition.onsetDateTime',vs:'',strength:'',nulls:['unknown'],sens:'Quasi-identifier',status:'published',version:'1.0.0',by:'specialist',appr:{steward:stew,owner:own}}),
+  mk({id:'biopsy_procedure',title:'Breast biopsy',def:'Biopsy procedure performed on the breast.',type:'code',card:'0..*',res:'Procedure',path:'Procedure.code',vs:'bc-biopsy',strength:'required',nulls:['not_recorded'],sens:'Clinical',status:'approved',version:'0.2.0',by:'specialist',appr:{steward:stew,owner:own}}),
+  mk({id:'her2_test',title:'HER2 test',def:'HER2 status test performed.',type:'code',card:'0..*',res:'Procedure',path:'Procedure.code',vs:'bc-her2-test',strength:'required',nulls:['not_recorded'],sens:'Clinical',status:'in_review',appr:{steward:null,owner:own}}),
+  mk({id:'receptor_test',title:'Receptor test (ER, PR, HER2)',def:'Receptor immunostain result for the tumour sample.',type:'code',card:'0..*',res:'Observation',path:'Observation.code',vs:'',strength:'',nulls:['not_recorded'],sens:'Clinical',status:'draft'}),
+  mk({id:'stage_group',title:'Stage group',def:'Clinical stage group at diagnosis.',type:'code',card:'0..1',res:'Observation',path:'Observation.value[x]',vs:'bc-stage-any',strength:'required',nulls:['not_recorded','unknown'],sens:'Clinical',status:'published',version:'1.0.0',by:'specialist',appr:{steward:stew,owner:own}}),
+  mk({id:'hormone_drug',title:'Hormone therapy medicine',def:'Endocrine drug prescribed, read from the linked Medication resource.',type:'code',card:'0..*',res:'MedicationRequest',path:'MedicationRequest.medication[x] → Medication.code',vs:'bc-hormone-drugs',strength:'required',nulls:['not_recorded'],sens:'Clinical',status:'submitted'}),
+  mk({id:'death_date',title:'Date of death',def:'Date of death recorded on the patient record.',type:'dateTime',card:'0..1',res:'Patient',path:'Patient.deceasedDateTime',vs:'',strength:'',nulls:['not_applicable'],sens:'Quasi-identifier',status:'approved',version:'0.2.0',by:'specialist',appr:{steward:stew,owner:own}})
+  ,mk({id:'dengue_case',prog:'DEN',title:'Dengue case classification',def:'Case classification on the notification form.',type:'code',card:'1..1',res:'',path:'',src:['csv','sql'],hint:'Column case_class in the notification form export',vs:'den-diagnosis',strength:'required',nulls:['unknown'],sens:'Clinical',status:'approved',version:'0.2.0',by:'specialist',appr:{steward:stew,owner:own}})
+ ]
+};
+Object.entries(DB).forEach(([k,a])=>a.forEach(i=>i.kind=k));
+DB.kpi.forEach(k=>{k.ds=k.ds||(k.prog==='DEN'?'den_case_mart':'bc_case_mart');k.pattern=k.pattern||'cadence';k.org=k.org||'District';if(k.sync===undefined)k.sync=k.id==='NDD-BC-001'?{ver:'1.0.0'}:null});
+const KIND={ds:'Schema',cs:'Local code system',code:'Local code',vs:'ValueSet',kpi:'KPI',el:'Data element'};
+const all=()=>[...DB.ds,...DB.cs,...DB.code,...DB.vs,...DB.kpi,...DB.el];
+const find=(k,id)=>DB[k].find(i=>i.id===id);
+const itemName=i=>i.kind==='ds'?i.id+' · '+i.title:i.kind==='cs'?i.id+' · '+i.title:i.kind==='code'?i.id+' · '+i.display:i.kind==='el'?i.id:i.kind==='kpi'?i.id+' · '+i.title:i.id;
+const vsStatusOf=id=>{const v=find('vs',id);return v?v.status:null};
+
+const AUDIT=[
+ {t:'04 Oct 14:20',who:'Kasun Jayawardena',role:'Terminology Specialist',act:'Submitted for review',tgt:'HBC-PR-01 v0.1.0'},
+ {t:'05 Oct 09:05',who:'Dr. Ruwan Silva',role:'Programme owner',act:'Approved',tgt:'HBC-PR-01 v0.1.0'},
+ {t:'06 Oct 11:40',who:'Dr. Anjali Perera',role:'Data steward',act:'Requested changes',tgt:'HBC-RX-01 v0.1.0'},
+ {t:'07 Oct 16:12',who:'System administrator',role:'System administrator',act:'Tagged release v0.3.0',tgt:'12 items'},
+ {t:'08 Oct 10:31',who:'Nimal Fernando',role:'Requester',act:'Submitted for review',tgt:'bc-chemo-procedure v0.1.0'}
+];
+const RELEASES=[
+ {v:'v0.3.0',d:'07 Oct 2026',n:'First published breast cancer receptor and stage mappings. KPI NDD-BC-001 published.',c:12},
+ {v:'v0.2.0',d:'23 Sep 2026',n:'Added ER and PR receptor mappings and the diagnosis ValueSet draft.',c:7},
+ {v:'v0.1.0',d:'09 Sep 2026',n:'Initial local code system HOSP_BC_01.',c:4}
+];
+let relCount=4;
+RELEASES[0].rollout={etl:'done',dw:'done',dhis2:'pending',bi:'pending'};
+RELEASES[1].rollout={etl:'done',dw:'done',dhis2:'done',bi:'done'};
+RELEASES[2].rollout={etl:'done',dw:'done',dhis2:'done',bi:'done'};
+const CONSUMERS={etl:{name:'ETL pipelines',pin:'v0.3.0'},dw:{name:'Data warehouse',pin:'v0.3.0'},dhis2:{name:'DHIS2',pin:'v0.2.0'},bi:{name:'BI semantic layer',pin:'v0.2.0'}};
+
+/* ---------- state ---------- */
+const S={prog:'all',me:'steward',route:'queue',tabs:{terminology:'codes',queue:'action'},drawer:null,q:'',stat:'all',sel:{}};
+const ROUTES=[['queue','Review queue'],['terminology','Terminology'],['kpis','KPIs'],['elements','Data elements'],['schemas','Schemas'],['releases','Releases'],['audit','Audit log']];
+const TITLES={queue:['Review queue','Everything waiting for a decision. The proposed rule is two approvals, one data steward and one programme owner. You cannot approve what you submitted.'],terminology:['Terminology','Local codes, their mappings to standard codes, and the ValueSets that group them.'],kpis:['KPI registry','Indicator definitions written as rules over ValueSets. Each version is reviewed before release.'],elements:['Data elements','What is collected, where the value comes from (CSV, SQL, FHIR or other), and which ValueSet it is bound to.'],schemas:['Schemas','Canonical datasets and marts that ETL loads and the warehouse builds. Each column can trace back to a data element.'],releases:['Releases','Approved items are tagged and exported for ETL, DHIS2, BI and survey forms.'],audit:['Audit log','Who did what, and when.']};
+const me=()=>PEOPLE[S.me];
+
+/* ---------- checks and impact ---------- */
+function usedBy(vsId){
+  return {kpis:DB.kpi.filter(k=>k.denom==='vs:'+vsId||k.numer==='vs:'+vsId),els:DB.el.filter(e=>e.vs===vsId)};
+}
+function checks(it){
+  const c=[],ok=t=>c.push({l:'ok',t}),w=t=>c.push({l:'warn',t}),wd=t=>c.push({l:'warn',t,dep:true}),f=t=>c.push({l:'fail',t});
+  if(it.kind==='code'){
+    ok('Local code is unique in '+it.system+'.');
+    const cs=find('cs',it.system);
+    if(cs&&!['approved','published'].includes(cs.status))wd('Code system '+it.system+' is '+STATUS[cs.status][0].toLowerCase()+'. Approve it first.');
+    if(!it.target) w('No standard target. Records with this code load as terminology-unresolved and wait for a Terminology Specialist.');
+    else{
+      const r=lookup(it.target.sys,it.target.code);
+      if(!r) f('Target code was not found on the country terminology server.');
+      else if(!r.active) f(SYS[r.sys].short+' '+r.code+' is inactive. Pick an active code.');
+      else ok(SYS[r.sys].short+' '+r.code+' exists and is active.');
+      if(!it.equiv) f('Choose an equivalence.');
+      else if(EQUIV[it.equiv].auto) ok('Equivalence "'+EQUIV[it.equiv].l.toLowerCase()+'": ETL applies this mapping automatically.');
+      else w('Equivalence "'+EQUIV[it.equiv].l.toLowerCase()+'": ETL sends matching records to review instead of applying it.');
+      if(it.clin) w('Needs clinician review before approval.');
+    }
+  }
+  if(it.kind==='ds'){
+    ok('Identifier is unique.');
+    if(!it.cols.length)f('Add at least one column.');
+    const names=it.cols.map(c=>c.name);
+    if(new Set(names).size!==names.length)f('Column names must be unique.');
+    const bad=it.cols.filter(c=>c.el&&find('el',c.el)&&!EL2COL[find('el',c.el).type].includes(c.type));
+    bad.forEach(c=>f('Column '+c.name+' is '+c.type+', but data element '+c.el+' is '+find('el',c.el).type+'.'));
+    if(!bad.length)ok('Column types match their data elements.');
+    const pend=it.cols.filter(c=>c.el&&!['approved','published'].includes((find('el',c.el)||{}).status));
+    if(pend.length)wd(pend.length+' column'+(pend.length>1?'s':'')+' read data elements that are not approved yet. Approve them first.');
+    if(!it.cols.some(c=>c.key))w('No key column is marked.');
+    if(it.cert)ok('Certified by the warehouse.');else w('Not certified by the warehouse yet. KPIs that read it cannot sync to DHIS2 until it is.');
+  }
+  if(it.kind==='cs'){
+    ok('Identifier is unique.');
+    const n=DB.code.filter(c=>c.system===it.id).length;
+    if(n)ok(n+' local code'+(n>1?'s':'')+' use this system.');else w('No local codes yet. Add codes after the system is approved.');
+    if(it.owner.length<3)f('Name the team that maintains it.');
+  }
+  if(it.kind==='vs'){
+    if(!it.members.length) f('ValueSet has no members. Add the code list before submitting.');
+    else ok(it.members.length+' explicit members. No filters or hierarchy, so it expands on GPS content.');
+    const bad=it.members.filter(m=>m[0]!=='local'&&!(lookup(m[0],m[1])||{}).active);
+    if(bad.length) f(bad.length+' member code(s) are inactive or missing on the country server.');
+    else if(it.members.length) ok('All standard members are active.');
+    const loc=it.members.filter(m=>m[0]==='local'&&find('code',m[1])&&!['approved','published'].includes(find('code',m[1]).status));
+    if(loc.length) w(loc.length+' local member(s) have mappings that are not approved yet.');
+    if(it.members.some(m=>m[0]==='local')&&it.members.some(m=>m[0]!=='local')) w('Mixes local and standard codes. Local codes only match data whose code was not converted to a standard code.');
+    if(it.note) w(it.note);
+  }
+  if(it.kind==='kpi'){
+    [['Denominator',it.denom],['Numerator',it.numer]].forEach(([l,v])=>{
+      if(v.startsWith('vs:')){const s=vsStatusOf(v.slice(3));
+        if(['approved','published'].includes(s)) ok(l+' ValueSet '+v.slice(3)+' is '+STATUS[s][0].toLowerCase()+'.');
+        else wd(l+' ValueSet '+v.slice(3)+' is '+(STATUS[s]||['unknown'])[0].toLowerCase()+'. Approve it first.');}
+      else{const e=find('el',v.slice(3));
+        if(e&&['approved','published'].includes(e.status))ok(l+' reads data element '+e.id+'.');
+        else wd(l+' reads data element '+v.slice(3)+', which is '+(e?STATUS[e.status][0].toLowerCase():'unknown')+'. Approve it first.');}
+    });
+    const dsx=find('ds',it.ds);
+    if(!dsx)f('Choose the dataset this KPI reads.');
+    else if(!['approved','published'].includes(dsx.status))wd('Dataset '+dsx.id+' is '+STATUS[dsx.status][0].toLowerCase()+'. Approve it first.');
+    else if(!dsx.cert)w('Dataset '+dsx.id+' is not certified yet. DHIS2 sync waits for certification.');
+    else ok('Reads certified dataset '+dsx.id+'.');
+    if(it.win==='none') w('No time window. Events count on any date. Confirm with the programme whether a window is needed.');
+    else ok('Time window set: '+winLabel(it.win)+'.');
+    if(it.sup>=5) ok('Small-cell suppression at '+it.sup+' or fewer.'); else w('Suppression threshold is below 5.');
+    if(it.extra) w(it.extra);
+  }
+  if(it.kind==='el'){
+    if(it.path){if(it.path.split(/[. ]/)[0]!==it.res) f('FHIR path should start with '+it.res+'.'); else ok('FHIR path matches the resource.');} else ok('Not tied to FHIR. Source: '+srcLabel(it)+'.');
+    if(it.type==='code'&&!it.vs) f('A coded element needs a ValueSet before it can be submitted.');
+    else if(it.vs){const s=vsStatusOf(it.vs); if(['approved','published'].includes(s)) ok('Bound to '+it.vs+' ('+it.strength+').'); else wd('Bound to '+it.vs+', which is '+(STATUS[s]||['unknown'])[0].toLowerCase()+'. Approve it first.');}
+    if(!DB.ds.some(d=>d.cols.some(c=>c.el===it.id)))w('Not loaded into any schema yet, so no warehouse column carries it.');
+    if(it.sens==='Quasi-identifier') w('Quasi-identifier. Generalised in research extracts and subject to small-cell rules.');
+  }
+  return c;
+}
+function impact(it){
+  if(it.kind==='ds')return ['KPIs reading it: '+(DB.kpi.filter(k=>k.ds===it.id).map(k=>k.id).join(', ')||'none')+'.','ETL canonical schema check.','Warehouse table build and certification.'];
+  if(it.kind==='cs')return ['Local codes in this system: '+DB.code.filter(c=>c.system===it.id).length+'.','ETL source-code registry.'];
+  if(it.kind==='code'){const v=DB.vs.filter(v=>v.members.some(m=>m[0]==='local'&&m[1]===it.id));return ['ETL code-mapping table, applied on the next run.'].concat(v.length?['In ValueSets: '+v.map(x=>x.id).join(', ')+'.']:[]);}
+  if(it.kind==='vs'){const u=usedBy(it.id);return [u.kpis.length?'KPIs: '+u.kpis.map(k=>k.id).join(', ')+'.':'Not used by any KPI yet.',u.els.length?'Data elements: '+u.els.map(e=>e.id).join(', ')+'.':'Not bound to any data element yet.','BI semantic layer membership table.'];}
+  if(it.kind==='kpi')return ['Warehouse dataset '+it.ds+' (counts per org unit, period and breakdown).','DHIS2 indicator, created or updated after the warehouse build.','BI semantic layer measure and dashboard lineage.'];
+  const ku=DB.kpi.filter(k=>k.numer==='el:'+it.id).map(k=>k.id);
+  return ['ETL schema check.','Warehouse columns: '+(DB.ds.flatMap(d=>d.cols.filter(c=>c.el===it.id).map(c=>d.id+'.'+c.name)).join(', ')||'none yet')+'.'].concat(ku.length?['KPIs reading it: '+ku.join(', ')+'.']:[]);
+}
+const winLabel=v=>({none:'None',m6:'Within 6 months of the index event',m12:'Within 12 months of the index event',y5:'Within 5 years of the index event'}[v]||v);
+const dimLabel={year:'Year of event',age_band:'Age band',sex:'Sex',district:'District of residence'};
+const failing=it=>checks(it).filter(c=>c.l==='fail');
+
+/* ---------- governance actions ---------- */
+const log=(act,it)=>AUDIT.push({t:today().slice(5)+' now',who:me().name,role:me().role,act,tgt:it.id+' v'+it.version});
+function toast(m){const e=document.createElement('div');e.className='toast';e.setAttribute('role','status');e.textContent=m;document.body.appendChild(e);setTimeout(()=>e.remove(),2600)}
+function keepLive(it){if(it.status==='published'&&!it.prev){const c=JSON.parse(JSON.stringify(it));delete c.prev;it.prev=c}}
+function post(it,text){it.thread.push({who:me().name,role:me().role,t:'just now',text})}
+function canReview(it){const m=me();return !!m.slot&&['submitted','in_review'].includes(it.status)&&it.by!==S.me&&!it.appr[m.slot]}
+function reviewBlock(it){const m=me();
+  if(!m.slot)return 'Only a data steward or programme owner can review.';
+  if(it.by===S.me)return 'You submitted this, so someone else has to review it.';
+  if(it.appr[m.slot])return 'You already approved this version.';
+  if(!['submitted','in_review'].includes(it.status))return 'Not waiting for review.';
+  return '';
+}
+function act(kind,key){
+  const it=find(...key.split('|')); const m=me();
+  if(kind==='submit'){const f=failing(it);if(f.length){toast('Fix the failed checks first');return}
+    it.status='submitted';it.appr={steward:null,owner:null};post(it,'Submitted for review.');log('Submitted for review',it);toast('Submitted for review')}
+  if(kind==='approve'){if(!canReview(it))return;
+    const blk=checks(it).filter(c=>c.l==='fail'||c.dep);if(blk.length){toast('Cannot approve yet: '+blk[0].t);return}
+    if(it.clin){const cb=document.getElementById('clin-ok');if(!cb||!cb.checked){toast('Confirm the clinician review first');return}it.clin=false;post(it,'Clinician review confirmed.')}
+    it.appr[m.slot]=m.name;
+    it.status=(it.appr.steward&&it.appr.owner)?'approved':'in_review';
+    post(it,'Approved as '+m.role.toLowerCase()+'.');log('Approved',it);toast(it.status==='approved'?'Approved by both roles. Ready for release':'Approved. One more approval needed')}
+  if(kind==='changes'){const t=($('#cmt')||{}).value||'';if(t.trim().length<8){const e=$('#cmt-err');if(e){e.parentElement.classList.add('bad')}return}
+    it.status='changes';it.appr={steward:null,owner:null};post(it,t.trim());log('Requested changes',it);toast('Sent back to the author')}
+  if(kind==='retract'){it.status='draft';it.appr={steward:null,owner:null};log('Withdrew submission',it);toast('Back to draft')}
+  render();if(S.drawer&&S.drawer.mode==='detail')openDetail(key);
+}
+
+/* ---------- rendering ---------- */
+const chip=s=>{const [l,t]=STATUS[s];return `<span class="chip ${t}">${l}</span>`};
+const sysChip=s=>`<span class="sys">${esc(SYS[s]?SYS[s].short:s)}</span>`;
+const pips=it=>`<span title="Data steward ${it.appr.steward?'approved':'pending'}, Programme owner ${it.appr.owner?'approved':'pending'}"><span class="pip ${it.appr.steward?'on':''}">S</span><span class="pip ${it.appr.owner?'on':''}">O</span></span>`;
+const keyOf=it=>it.kind+'|'+it.id;
+const person=k=>PEOPLE[k].name;
+
+const inProg=i=>S.prog==='all'||i.prog===S.prog||i.prog==='*';
+const pchip=i=>S.prog==='all'?` <span class="sys">${esc(progName(i.prog))}</span>`:'';
+function needsMe(it){return ['submitted','in_review'].includes(it.status)&&!reviewBlock(it)}
+function render(){
+  const nm=all().filter(inProg).filter(needsMe).length;
+  $('#nav').innerHTML=ROUTES.map(([r,l])=>`<button data-go="${r}" ${S.route===r?'aria-current="page"':''}><span>${l}</span>${r==='queue'&&nm?`<span class="badge" aria-label="${nm} waiting for you">${nm}</span>`:''}</button>`).join('');
+  $('#title').textContent=TITLES[S.route][0];$('#sub').textContent=TITLES[S.route][1];
+  $('#prog').innerHTML=`<option value="all">All programmes</option>`+Object.entries(PROGS).map(([k,v])=>`<option value="${k}" ${k===S.prog?'selected':''}>${v.name}</option>`).join('');
+  $('#persona').innerHTML=Object.entries(PEOPLE).map(([k,p])=>`<option value="${k}" ${k===S.me?'selected':''}>${p.name} · ${p.role}</option>`).join('');
+  $('#main').innerHTML=({queue:rQueue,terminology:rTerm,kpis:rKpis,elements:rEls,schemas:rSchemas,releases:rRel,audit:rAudit})[S.route]();
+}
+function table(heads,rows){return `<div class="tw"><table><thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows||''}</tbody></table></div>`}
+
+function rQueue(){
+  const prog=all().filter(inProg).filter(i=>['submitted','in_review','changes'].includes(i.status));
+  const mine=prog.filter(needsMe), drafts=all().filter(inProg).filter(i=>i.status==='draft'&&i.by===S.me);
+  const tab=S.tabs.queue; const list=tab==='action'?mine:tab==='all'?prog:drafts;
+  const rows=list.map(i=>`<tr class="row" data-open="${keyOf(i)}"><td><div class="kind">${KIND[i.kind]}${pchip(i)}</div><div class="mono">${esc(itemName(i))}</div></td><td class="mono">v${i.version}</td><td>${chip(i.status)}</td><td>${esc(person(i.by))}</td><td>${pips(i)}</td><td>${needsMe(i)?'<span class="mine">Your decision</span>':i.status==='changes'?'<span class="dim">With author</span>':'<span class="dim">Waiting</span>'}</td></tr>`).join('');
+  return `<div class="tabs" role="tablist">${[['action','Needs my decision',mine.length],['all','All in progress',prog.length],['drafts','My drafts',drafts.length]].map(([k,l,n])=>`<button role="tab" aria-selected="${tab===k}" data-qtab="${k}">${l}<span class="n">${n}</span></button>`).join('')}</div>`+
+  (list.length?table(['Item','Version','Status','Submitted by','Approvals','Next'],rows):`<div class="tw"><div class="empty">${tab==='action'?(me().slot?'Nothing is waiting for you.':'Reviews are done by a data steward or programme owner. Switch role above to try one.'):tab==='drafts'?'You have no drafts.':'Nothing in progress.'}</div></div>`);
+}
+
+function tgtCell(it){
+  if(!it.target)return '<span class="chip warn">No standard target</span>';
+  const r=lookup(it.target.sys,it.target.code);
+  return `${sysChip(it.target.sys)} <span class="mono">${esc(it.target.code)}</span><div class="dim">${esc(r?r.display:'')}</div>`;
+}
+function rTerm(){
+  const t=S.tabs.terminology, un=DB.code.filter(inProg).filter(c=>!c.target);
+  const tabs=[['codes','Local codes',DB.code.filter(inProg).length],['unmapped','Unmapped',un.length],['vs','ValueSets',DB.vs.filter(inProg).length],['cs','Code systems',DB.cs.filter(inProg).length],['std','Reference systems','']];
+  let body='';
+  if(t==='codes'||t==='unmapped'){
+    let list=t==='unmapped'?un:DB.code.filter(inProg);
+    if(S.q)list=list.filter(c=>(c.id+c.display).toLowerCase().includes(S.q.toLowerCase()));
+    if(S.stat!=='all'&&t==='codes')list=list.filter(c=>c.status===S.stat);
+    const add=me().author?'':'disabled title="Only requesters and terminology specialists can add codes"';
+    body=`<div class="bar"><input type="text" id="q" placeholder="Search local code or name" value="${esc(S.q)}" aria-label="Search">${t==='codes'?`<select id="stat" aria-label="Status"><option value="all">All statuses</option>${Object.keys(STATUS).map(s=>`<option value="${s}" ${S.stat===s?'selected':''}>${STATUS[s][0]}</option>`).join('')}</select>`:''}<span class="sp"></span><button class="btn pri" data-new="code" ${add}>New local code</button></div>`+
+    (t==='unmapped'?`<p class="lede">These codes have no standard equivalent yet. Their records load as terminology-unresolved until a mapping is approved, or until you confirm the code stays local.</p>`:'')+
+    (list.length?table(t==='unmapped'?['Local code','Name','Resource','Seen','']:['Local code','Name','Maps to','Equivalence','Status','Version'],
+      list.map(c=>t==='unmapped'?`<tr class="row" data-open="${keyOf(c)}"><td class="mono">${c.id}</td><td>${esc(c.display)}</td><td>${RESL[c.res]||c.res||'Kind not set'}</td><td class="dim">${esc(c.seen||'')}</td><td><button class="btn" data-map="${c.id}" ${me().author?'':'disabled'}>Map now</button></td></tr>`:
+      `<tr class="row" data-open="${keyOf(c)}"><td class="mono">${c.id}<div class="dim">${c.system}${pchip(c)}</div></td><td>${esc(c.display)}${c.clin?'<div><span class="chip warn">Clinician review</span></div>':''}</td><td>${tgtCell(c)}</td><td>${c.equiv?EQUIV[c.equiv].l:'<span class="dim">–</span>'}</td><td>${chip(c.status)}</td><td class="mono">v${c.version}</td></tr>`).join('')):`<div class="tw"><div class="empty">No codes match.</div></div>`);
+  }
+  if(t==='vs'){
+    body=`<div class="bar"><span class="dim">ValueSets list their codes one by one. They do not use filters or hierarchy, because GPS has none.</span><span class="sp"></span><button class="btn pri" data-new="vs" ${me().author?'':'disabled title="Only requesters and terminology specialists can add ValueSets"'}>New ValueSet</button></div><div class="grid">`+DB.vs.filter(inProg).map(v=>{const u=usedBy(v.id);return `<div class="card" data-open="${keyOf(v)}" tabindex="0" role="button"><div class="meta">${chip(v.status)}${pchip(v)}<span class="mono dim">v${v.version}</span></div><h3>${esc(v.title)}</h3><div class="mono dim">${v.id}</div><div class="meta"><span>${v.members.length?v.members.length+' codes':'<span class="chip bad">No codes</span>'}</span><span class="dim">· ${u.kpis.length} KPI${u.kpis.length===1?'':'s'}, ${u.els.length} element${u.els.length===1?'':'s'}</span></div></div>`}).join('')+'</div>';
+  }
+  if(t==='cs'){
+    body=`<div class="bar"><span class="dim">A local code system is the list of codes one source system uses. Every local code belongs to one.</span><span class="sp"></span><button class="btn pri" data-new="cs" ${me().author?'':'disabled title="Only requesters and terminology specialists can add code systems"'}>New code system</button></div>`+table(['Code system','Maintained by','Codes','Status','Version'],DB.cs.filter(inProg).map(c=>`<tr class="row" data-open="${keyOf(c)}"><td><div class="mono">${c.id}${pchip(c)}</div>${esc(c.title)}</td><td>${esc(c.owner)}</td><td>${DB.code.filter(x=>x.system===c.id).length}</td><td>${chip(c.status)}</td><td class="mono">v${c.version}</td></tr>`).join(''));
+  }
+  if(t==='std'){
+    body=`<p class="lede">The NDD does not store standard terminologies. It looks codes up on the country terminology server and keeps only a reference to the code and system.</p>`+table(['System','Used for','Status'],
+      Object.values(SYS).map(s=>`<tr><td><b>${s.label}</b><div class="mono dim">${s.uri}</div></td><td>${s.note||'Lookup and validation'}</td><td><span class="chip ok">Connected</span><div class="dim">${s.ver}</div></td></tr>`).join('')+`<tr><td><b>ICD-11</b></td><td>Under investigation</td><td><span class="chip muted">Not enabled</span></td></tr>`);
+  }
+  return `<div class="tabs" role="tablist">${tabs.map(([k,l,n])=>`<button role="tab" aria-selected="${t===k}" data-ttab="${k}">${l}${n!==''?`<span class="n">${n}</span>`:''}</button>`).join('')}</div>`+body;
+}
+
+function ruleText(v){
+  if(v.startsWith('vs:')){const id=v.slice(3),x=find('vs',id);return `<span class="mono">${id}</span> <span class="dim">· ${x?x.members.length:0} codes · ${x?STATUS[x.status][0]:''}</span>`}
+  return `<span class="mono">${esc(v.slice(3))}</span> <span class="dim">has a value</span>`;
+}
+function rKpis(){
+  const add=me().author?'':'disabled title="Only requesters and terminology specialists can create KPIs"';
+  return `<div class="bar"><span class="dim">Facility comes from the facility registry and is not part of the KPI rule.</span><span class="sp"></span><button class="btn pri" data-new="kpi" ${add}>New KPI</button></div>`+
+  table(['KPI','Rule','Breakdowns','Status','Version'],DB.kpi.filter(inProg).map(k=>`<tr class="row" data-open="${keyOf(k)}"><td><div class="mono">${k.id}${pchip(k)}</div><b>${esc(k.title)}</b></td><td>${ruleText(k.numer)}<div class="dim">out of</div>${ruleText(k.denom)}</td><td>${k.dims.map(d=>dimLabel[d]).join(', ')}</td><td>${chip(k.status)}</td><td class="mono">v${k.version}</td></tr>`).join(''));
+}
+function rEls(){
+  const add=me().author?'':'disabled title="Only requesters and terminology specialists can add elements"';
+  return `<div class="bar"><span class="sp"></span><button class="btn pri" data-new="el" ${add}>New data element</button></div>`+
+  table(['Element','Type','Source','Bound to','Handling','Status'],DB.el.filter(inProg).map(e=>`<tr class="row" data-open="${keyOf(e)}"><td><div class="mono">${e.id}${pchip(e)}</div>${esc(e.title)}</td><td>${e.type} <span class="dim">${e.card}</span></td><td>${esc(srcLabel(e))}<div class=\"dim mono\">${esc(fhirTxt(e))}</div></td><td>${e.vs?`<span class="mono">${e.vs}</span><div class="dim">${e.strength}</div>`:(e.type==='code'?'<span class="chip bad">No ValueSet</span>':'<span class="dim">–</span>')}</td><td>${e.sens}</td><td>${chip(e.status)}</td></tr>`).join(''));
+}
+
+function rSchemas(){
+  const add=me().author?'':'disabled title="Only requesters and terminology specialists can add schemas"';
+  return `<div class="bar"><span class="dim">The warehouse certifies a dataset. The NDD only records whether it has.</span><span class="sp"></span><button class="btn pri" data-new="ds" ${add}>New schema</button></div>`+
+  table(['Schema','Layer','One row is','Columns','Certified','Status','Version'],DB.ds.filter(inProg).map(d=>`<tr class="row" data-open="${keyOf(d)}"><td><div class="mono">${d.id}${pchip(d)}</div>${esc(d.title)}</td><td>${d.layer}</td><td>${esc(d.grain)}</td><td>${d.cols.length}</td><td>${d.cert?'<span class="chip ok">Yes</span>':'<span class="chip muted">No</span>'}</td><td>${chip(d.status)}</td><td class="mono">v${d.version}</td></tr>`).join(''));
+}
+function releaseItems(){return all().filter(i=>i.status==='approved')}
+function yaml(){
+  const pub=all().map(i=>['approved','published'].includes(i.status)?i:(i.prev||null)).filter(Boolean);
+  const L=['release: v0.'+relCount+'.0','generated: '+today(),'systems:'].concat(Object.values(SYS).map(s=>'  - '+s.uri));
+  L.push('code_systems:');pub.filter(i=>i.kind==='cs').forEach(c=>L.push('  - id: '+c.id,'    url: '+csUrl(c.id),'    programme: '+c.prog,'    version: '+c.version,'    owner: "'+c.owner+'"','    case_sensitive: '+(c.cased===false?'false':'true')));
+  L.push('mappings:');pub.filter(i=>i.kind==='code'&&i.target).forEach(i=>L.push('  - source: {system: '+csUrl(i.system)+', code: '+i.id+'}','    programme: '+i.prog,'    target: {system: '+SYS[i.target.sys].uri+', code: "'+i.target.code+'"}','    equivalence: '+i.equiv+'  # '+(EQUIV[i.equiv].auto?'applied by ETL':'routed to review'),'    version: '+i.version));
+  L.push('valuesets:');pub.filter(i=>i.kind==='vs').forEach(v=>{L.push('  - id: '+v.id,'    url: '+vsUrl(v.id),'    programme: '+v.prog,'    version: '+v.version,'    members:');v.members.forEach(m=>{const lc=m[0]==='local'?find('code',m[1]):null;L.push('      - {system: '+(m[0]==='local'?(lc?csUrl(lc.system):'local'):SYS[m[0]].uri+', version: "'+SYS[m[0]].ver+'"')+', code: "'+m[1]+'"}')})});
+  L.push('kpis:');pub.filter(i=>i.kind==='kpi').forEach(k=>L.push('  - id: '+k.id,'    programme: '+k.prog,'    version: '+k.version,'    numerator: '+k.numer,'    denominator: '+k.denom,'    time_window: '+k.win,'    dataset: '+k.ds,'    dhis2_short_name: "'+kShort(k)+'"','    dhis2_indicator_type: '+(UNITS[k.unit]||UNITS['%'])[0]+' (factor '+(UNITS[k.unit]||UNITS['%'])[1]+')','    dhis2_decimals: '+kDec(k),'    dhis2_period: '+(PERIOD[k.cad]||k.cad),'    dhis2_ingestion: '+k.pattern,'    suppress_below: '+(k.sup+1),'    breakdowns: ['+k.dims.join(', ')+']'));
+  L.push('data_elements:');pub.filter(i=>i.kind==='el').forEach(e=>L.push('  - id: '+e.id,'    programme: '+e.prog,'    version: '+e.version,'    source: ['+(e.src&&e.src.length?e.src:['fhir']).join(', ')+']','    fhir_path: '+(e.path?'"'+e.path+'"':'null'),'    binding: '+(e.vs?e.vs+' ('+e.strength+')':'none')));
+  L.push('schemas:');pub.filter(i=>i.kind==='ds').forEach(d=>{L.push('  - id: '+d.id,'    programme: '+d.prog,'    version: '+d.version,'    layer: '+d.layer,'    grain: "'+d.grain+'"','    columns:');d.cols.forEach(c=>L.push('      - {name: '+c.name+', type: '+c.type+(c.el?', element: '+c.el:'')+(c.key?', key: true':'')+'}'))});
+  return L.join('\n');
+}
+const STAGES=[['etl','ETL import','Imports the schema and mapping tables',null],['dw','Warehouse build','Builds tables and certified views','etl'],['dhis2','DHIS2 sync','Creates or updates indicators and data elements','dw'],['bi','BI semantic layer','Refreshes measures and certified datasets','dw']];
+function rolloutBlock(){
+  const r=RELEASES[0],st=r.rollout,adm=!!me().release;
+  const rows=STAGES.map(([k,l,d,pre])=>{const done=st[k]==='done',blocked=!done&&pre&&st[pre]!=='done';
+    const chp=done?'<span class="chip ok">Done</span>':blocked?`<span class="chip muted">Waiting for ${STAGES.find(x=>x[0]===pre)[1]}</span>`:'<span class="chip warn">Ready to run</span>';
+    return `<tr class="stage"><td><b>${l}</b></td><td class="dim">${d}</td><td>${chp}</td><td>${!done&&!blocked?`<button class="btn" data-stage="${k}" ${adm?'':'disabled title="Only the system administrator runs rollout steps"'}>Run</button>`:''}</td></tr>`}).join('');
+  const cons=Object.entries(CONSUMERS).map(([k,c])=>`<tr><td><b>${c.name}</b></td><td class="mono">${c.pin}</td><td>${c.pin===r.v?'<span class="chip ok">Current</span>':'<span class="chip warn">Behind '+r.v+'</span>'}</td></tr>`).join('');
+  return `<div class="two rollout" style="margin-bottom:26px"><div><h2>Rollout of ${r.v}</h2><p class="lede">Steps run in order. DHIS2 syncs last, after ETL has imported the schema and the warehouse has built it.</p>${table(['Step','What it does','State',''],rows)}</div><div><h2>Consumers</h2><p class="lede">The release each system is running.</p>${table(['Consumer','Pinned to','State'],cons)}</div></div>`;
+}
+function runStage(k){
+  const r=RELEASES[0];r.rollout[k]='done';CONSUMERS[k].pin=r.v;
+  let note='';
+  if(k==='dw'){const n=DB.ds.filter(d=>d.status==='published'&&!d.cert);n.forEach(d=>{d.cert=true});note=n.length?' · '+n.length+' dataset'+(n.length>1?'s':'')+' certified':''}
+  if(k==='dhis2'){const ready=DB.kpi.filter(x=>x.status==='published'&&(find('ds',x.ds)||{}).cert);ready.forEach(x=>{x.sync={ver:x.version}});
+    const held=DB.kpi.filter(x=>x.status==='published'&&!(find('ds',x.ds)||{}).cert).length;note=' · '+ready.length+' synced'+(held?', '+held+' held until their dataset is certified':'')}
+  AUDIT.push({t:'11 Oct now',who:me().name,role:me().role,act:'Rollout step done: '+STAGES.find(x=>x[0]===k)[1],tgt:r.v});
+  toast(STAGES.find(x=>x[0]===k)[1]+' done'+note);render();
+}
+function rRel(){
+  const ready=releaseItems(),isAdmin=!!me().release;
+  return rolloutBlock()+`<div class="two"><div><h2>Ready to merge and tag</h2><p class="lede">Approved pull requests are merged, then one release tag is cut. Published items stay in the export unchanged.</p>`+
+  (ready.length?`<div class="tw"><table><tbody>${ready.map(i=>`<tr><td><span class="kind">${KIND[i.kind]}</span><div class="mono">${esc(itemName(i))}</div></td><td class="mono">v${i.version}</td></tr>`).join('')}</tbody></table></div>`:`<div class="tw"><div class="empty">No approved items waiting.</div></div>`)+
+  `<div class="fr" style="margin-top:14px"><label for="rn">Release notes</label><textarea id="rn" placeholder="What changed and why">Approved mappings, ValueSets, KPIs and data elements for this release.</textarea></div>
+  <button class="btn pri" data-release ${isAdmin&&ready.length?'':'disabled'}>Tag release v0.${relCount}.0</button> <span class="dim">${isAdmin?'':'Only the system administrator tags releases.'}</span>
+  <h2 style="margin-top:24px">History</h2>${RELEASES.map(r=>`<div class="msg" style="margin-bottom:8px"><b class="mono">${r.v}</b><small>${r.d} · ${r.c} items</small> ${[['etl','ETL'],['dw','DW'],['dhis2','DHIS2'],['bi','BI']].map(([k,l])=>`<span class="chip ${r.rollout[k]==='done'?'ok':'muted'}">${l}</span>`).join(' ')}<div>${esc(r.n)}</div></div>`).join('')}</div>
+  <div><h2>Machine-readable export</h2><p class="lede">The YAML files in the repository at the release tag, combined for ETL schema checks and the BI semantic layer. Only merged content is in it.</p><pre class="code" id="yaml">${esc(yaml())}</pre><div class="bar" style="margin-top:8px"><button class="btn" data-copy>Copy export</button></div></div></div>`;
+}
+function rAudit(){return table(['When','Who','Action','Item'],AUDIT.slice().reverse().map(a=>`<tr><td class="dim">${a.t}</td><td>${esc(a.who)}<div class="dim">${a.role}</div></td><td>${a.act}</td><td class="mono">${esc(a.tgt)}</td></tr>`).join(''))}
+
+/* ---------- detail drawer ---------- */
+let lastFocus=null;
+function layer(h){
+  if(h&&!$('#layer').innerHTML)lastFocus=document.activeElement;
+  layerSet(h);
+  if(h){const d=$('#layer .drawer');if(d){d.tabIndex=-1;d.focus({preventScroll:true})}}
+  else if(lastFocus&&lastFocus.focus){try{lastFocus.focus()}catch(_){}lastFocus=null}
+}
+function layerSet(h){$('#layer').innerHTML=h?`<div class="drawer-bg" data-close></div><aside class="drawer ${S.drawer&&S.drawer.mode==='form'?'modal':''}" role="dialog" aria-modal="true" aria-label="Details">${h}</aside>`:'';}
+function closeDrawer(){S.drawer=null;layer('')}
+function warehouseCols(it){const r=DB.ds.flatMap(d=>d.cols.filter(c=>c.el===it.id).map(c=>'<span class="mono">'+esc(d.id+'.'+c.name)+'</span>'));return r.length?r.join(', '):'<span class="dim">Not in any schema</span>'}
+function kpiUse(it){
+  const ds=find('ds',it.ds),r=RELEASES[0],live=['approved','published'].includes(it.status);
+  const dsChip=!ds?'<span class="chip bad">Not set</span>':ds.cert?'<span class="chip ok">Certified</span>':'<span class="chip warn">Not certified</span>';
+  const dh=it.sync?(it.sync.ver===it.version?`<span class="chip ok">In sync · v${esc(it.sync.ver)}</span>`:`<span class="chip warn">Behind · DHIS2 has v${esc(it.sync.ver)}</span>`):(live?'<span class="chip muted">Waiting for rollout</span>':'<span class="chip muted">Not approved</span>');
+  const bi=live?((r.rollout.bi==='done'&&it.status==='published')?'<span class="chip ok">Available</span>':'<span class="chip muted">After rollout</span>'):'<span class="chip muted">Not approved</span>';
+  const rows=[
+   ['Warehouse',`<span class="mono">${esc(it.ds||'none')}</span>${ds?' · '+ds.layer:''}<div class="dim">Counts per org unit, period and breakdown. Cells of ${it.sup} or fewer are hidden before anything leaves the warehouse.</div>`,dsChip],
+   ['DHIS2',`${PATTERN[it.pattern]||''}<div class="dim">${it.pattern==='event'?'Program indicator':'Indicator ('+esc((UNITS[it.unit]||[it.unit])[0].toLowerCase())+', factor '+(UNITS[it.unit]||[0,1])[1]+') from numerator and denominator data elements'}. Period type ${PERIOD[it.cad]||esc(it.cad)}. Lowest org unit ${esc(it.org)}. Categories: ${it.dims.filter(d=>DIMROLE[d]==='Category').map(d=>dimLabel[d]).join(', ')||'none'}. DHIS2 assigns its IDs on first sync, and syncs only after the warehouse build.</div>`,dh],
+   ['BI',`<span class="mono">${esc(it.id.toLowerCase().replace(/-/g,'_'))}</span><div class="dim">Semantic layer measure on certified datasets only.</div>`,bi]
+  ];
+  return `<div class="sec"><h4>Where it is used</h4>${table(['Layer','Setting','State'],rows.map(x=>`<tr><td><b>${x[0]}</b></td><td>${x[1]}</td><td>${x[2]}</td></tr>`).join(''))}</div>`;
+}
+function openDetail(key){
+  S.drawer={mode:'detail',key};const it=find(...key.split('|'));if(!it)return closeDrawer();
+  const cur=it.status==='changes'?'draft':it.status;
+  const steps=`<ol class="steps">${FLOW.map((s,i)=>`<li class="${s===cur?'cur':FLOW.indexOf(cur)>i?'done':''}">${FLOWL[s]}</li>`).join('')}</ol>`;
+  let main='';
+  if(it.kind==='code'){
+    const r=it.target&&lookup(it.target.sys,it.target.code);
+    main=`<div class="sec"><h4>Mapping</h4><div class="map"><div class="end"><div class="kind">Local · ${it.system}</div><div class="mono"><b>${it.id}</b></div><div>${esc(it.display)}</div><div class="dim">${RESL[it.res]||it.res||'Kind not set'}</div></div><div class="mid"><span>${it.equiv?EQUIV[it.equiv].l:'no target'}</span><span aria-hidden="true">→</span></div><div class="end">${it.target?`<div class="kind">${SYS[it.target.sys].label}</div><div class="mono"><b>${esc(it.target.code)}</b></div><div>${esc(r?r.display:'')}</div>`:`<div class="kind">Standard</div><div class="dim">Stays local until a standard equivalent is chosen.</div>`}</div></div>${it.rationale?`<p class="dim">Reason: ${esc(it.rationale)}</p>`:''}</div>`;
+  }
+  if(it.kind==='vs'){
+    main=`<div class="sec"><h4>Identity</h4><dl class="kv"><dt>Canonical URL</dt><dd class="mono">${esc(vsUrl(it.id))}</dd><dt>Version</dt><dd class="mono">${esc(it.version)}</dd><dt>Standard systems pinned</dt><dd>${pinsText(it.members)}</dd></dl></div><div class="sec"><h4>Members (${it.members.length})</h4>${it.members.length?table(['System','Code','Name'],it.members.map(m=>{const r=m[0]==='local'?null:lookup(m[0],m[1]);const lc=m[0]==='local'?find('code',m[1]):null;return `<tr><td>${m[0]==='local'?'<span class="sys">Local</span>':sysChip(m[0])}</td><td class="mono">${esc(m[1])}</td><td>${esc(r?r.display:lc?lc.display:'')}${r&&!r.active?' <span class="chip bad">Inactive</span>':''}</td></tr>`}).join('')):`<div class="empty">No codes yet.</div>`}</div>`;
+  }
+  if(it.kind==='cs'){
+    main=`<div class="sec"><h4>Specification</h4><dl class="kv"><dt>Identifier</dt><dd class="mono">${esc(it.id)}</dd><dt>Canonical URL</dt><dd class="mono">${esc(csUrl(it.id))}</dd><dt>FHIR id</dt><dd class="mono">${esc(fhirId(it.id))}</dd><dt>Source system</dt><dd>${esc((STYPES.find(x=>x[0]===it.stype)||[0,'Not recorded'])[1])}</dd><dt>Case sensitive</dt><dd>${it.cased===false?'No':'Yes'}</dd><dt>Maintained by</dt><dd>${esc(it.owner)}</dd><dt>Covers</dt><dd>${esc(it.desc)}</dd><dt>Local codes</dt><dd>${DB.code.filter(c=>c.system===it.id).length}</dd></dl></div>`;
+  }
+  if(it.kind==='ds'){
+    main=`<div class="sec"><h4>Specification</h4><dl class="kv"><dt>Layer</dt><dd>${it.layer}</dd><dt>One row is</dt><dd>${esc(it.grain)}</dd><dt>Certification</dt><dd>${it.cert?'<span class="chip ok">Certified by the warehouse</span>':'<span class="chip warn">Not certified</span>'}</dd></dl></div><div class="sec"><h4>Columns (${it.cols.length})</h4>${table(['Column','Type','Source data element','Note'],it.cols.map(c=>{const x=c.el?find('el',c.el):null;return `<tr><td class="mono">${esc(c.name)}${c.key?' <span class="chip muted">key</span>':''}</td><td class="mono">${c.type}</td><td>${c.el?`<span class="mono">${esc(c.el)}</span>${x?' '+chip(x.status):' <span class="chip bad">Missing</span>'}`:'<span class="dim">–</span>'}</td><td class="dim">${esc(c.note||'')}</td></tr>`}).join(''))}</div>`;
+  }
+  if(it.kind==='kpi'){
+    main=`<div class="sec"><h4>Rule</h4><div class="frac"><span class="lbl">Numerator</span><div class="rule">${ruleText(it.numer)}</div><span class="lbl">Denominator</span><div class="rule">${ruleText(it.denom)}</div></div><dl class="kv" style="margin-top:12px"><dt>Definition</dt><dd>${esc(it.definition)}</dd><dt>Unit</dt><dd>${it.unit}</dd><dt>Time window</dt><dd>${winLabel(it.win)}</dd><dt>Breakdowns</dt><dd>${it.dims.map(d=>dimLabel[d]).join(', ')}, plus facility from the registry</dd><dt>Cadence</dt><dd>${it.cad}</dd><dt>Small cells</dt><dd>Hidden at ${it.sup} or fewer</dd></dl></div>`+kpiUse(it)+`<div class="sec"><h4>How this appears in DHIS2</h4>${d2html(it)}</div>`;
+  }
+  if(it.kind==='el'){
+    main=`<div class="sec"><h4>Specification</h4><dl class="kv"><dt>Definition</dt><dd>${esc(it.def)}</dd><dt>Type</dt><dd>${it.type}, ${it.card}</dd><dt>Source</dt><dd>${esc(srcLabel(it))}${it.hint?`<div class="dim">${esc(it.hint)}</div>`:''}</dd><dt>FHIR path</dt><dd>${it.path?`<span class="mono">${esc(it.path)}</span>`:'<span class="dim">Not mapped to FHIR</span>'}</dd><dt>Canonical column</dt><dd class="mono">${esc(it.id)}</dd><dt>Bound to</dt><dd>${it.vs?`<span class="mono">${it.vs}</span> (${it.strength})`:'<span class="dim">None</span>'}</dd><dt>When empty</dt><dd>${it.nulls.map(n=>({not_recorded:'Not recorded',unknown:'Unknown',not_applicable:'Not applicable'}[n])).join(', ')}</dd><dt>Handling</dt><dd>${it.sens}</dd><dt>Warehouse column</dt><dd>${warehouseCols(it)}</dd></dl></div>`;
+  }
+  const ck=checks(it);
+  const thread=it.thread.length?`<div class="thread">${it.thread.map(m=>`<div class="msg"><b>${esc(m.who)}</b><small>${m.role} · ${m.t}</small><div>${esc(m.text)}</div></div>`).join('')}</div>`:'<div class="dim">No comments yet.</div>';
+  const m=me(),blk=reviewBlock(it);
+  const isAuthor=m.author&&['draft','changes'].includes(it.status);
+  let foot='';
+  if(isAuthor){const fl=failing(it).length;foot=`<span class="why">${fl?fl+' check'+(fl>1?'s':'')+' must pass before submitting.':'Ready to submit.'}</span><button class="btn" data-edit="${key}">Edit</button><button class="btn pri" data-act="submit" data-key="${key}" ${fl?'disabled':''}>${it.status==='changes'?'Resubmit':'Submit (opens pull request)'}</button>`}
+  else if(['submitted','in_review'].includes(it.status)){
+    const nb=checks(it).filter(c=>c.l==='fail'||c.dep).length;
+    foot=`<span class="why">${blk||(nb?'Cannot approve yet: '+nb+' check'+(nb>1?'s':'')+' open. Request changes or wait for the dependencies.':'Add a comment if you request changes.')}</span>`+(!blk?`<button class="btn bad" data-act="changes" data-key="${key}">Request changes</button><button class="btn ok" data-act="approve" data-key="${key}" ${nb?'disabled':''}>Approve</button>`:(it.by===S.me?`<button class="btn" data-act="retract" data-key="${key}">Withdraw</button>`:''));
+  }else if(it.status==='approved')foot=`<span class="why">Both reviews are in. The system administrator merges the pull request and tags the release from Releases.</span>`;
+  else if(it.status==='published')foot=`<span class="why">Merged and tagged. Changing it opens a new branch and a new pull request.</span>${m.author?`<button class="btn" data-edit="${key}">New version</button>`:''}`;
+  const reviewing=!blk&&['submitted','in_review'].includes(it.status);
+  layer(`<div class="dh"><div><div class="kind">${KIND[it.kind]}</div><h3>${esc(it.kind==='code'?it.id+' · '+it.display:it.kind==='kpi'?it.title:it.kind==='vs'?it.title:it.title)}</h3><div class="meta" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${chip(it.status)}<span class="mono dim">${it.id}</span><span class="mono dim">v${it.version}</span></div></div><button class="x" data-close aria-label="Close">×</button></div>
+  <div class="db">${steps}${main}
+  <div class="sec"><h4>Git</h4><dl class="kv"><dt>State</dt><dd><span class="chip ${gitInfo(it).st[1]}">${gitInfo(it).st[0]}</span></dd><dt>Branch</dt><dd class="mono">${esc(gitInfo(it).br)}</dd><dt>File</dt><dd class="mono">${esc(gitInfo(it).file)}</dd><dt>Release tag</dt><dd>${it.status==='published'?'<span class="mono">v0.'+(relCount-1)+'.0</span>':'<span class="dim">Added when the release is tagged</span>'}</dd></dl><p class="dim" style="margin:6px 0 0">This screen is a front end for the repository. Every change is a pull request on that file.</p></div>
+  <div class="sec"><h4>Automated validation (CI)</h4><div class="checks">${ck.map(c=>`<div class="ck ${c.l}"><i>${c.l==='ok'?'✓':c.l==='warn'?'!':'×'}</i><span>${c.dep?'<span class="chip warn">Blocks approval</span> ':''}${esc(c.t)}</span></div>`).join('')}</div></div>
+  <div class="sec"><h4>Pull request reviews</h4><dl class="kv"><dt>Data steward</dt><dd>${it.appr.steward?'✓ '+esc(it.appr.steward):'<span class="dim">Pending</span>'}</dd><dt>Programme owner</dt><dd>${it.appr.owner?'✓ '+esc(it.appr.owner):'<span class="dim">Pending</span>'}</dd><dt>Programme</dt><dd>${esc(progName(it.prog))}</dd>${it.prev?`<dt>Live version</dt><dd>v${esc(it.prev.version)} stays live until this version is released</dd>`:''}<dt>Submitted by</dt><dd>${esc(person(it.by))}</dd></dl></div>
+  <div class="sec"><h4>Used by</h4><ul style="margin:0;padding-left:18px">${impact(it).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+  <div class="sec"><h4>Discussion</h4>${thread}${reviewing&&it.clin?'<div class="choice" style="margin-top:10px"><input type="checkbox" id="clin-ok"><label for="clin-ok">A clinician has reviewed this mapping</label></div>':''}${reviewing?`<div class="fr" style="margin-top:10px"><label for="cmt">Comment</label><textarea id="cmt" placeholder="Required when you request changes"></textarea><div class="err" id="cmt-err">Write at least a short reason so the author knows what to fix.</div></div>`:''}</div></div>
+  <div class="df">${foot}</div>`);
+}
+
+/* ---------- forms ---------- */
+function field(id,label,inner,hint,req){return `<div class="fr" data-fr="${id}"><label for="${id}">${label}${req?' *':''}</label>${inner}${hint?`<div class="hint">${hint}</div>`:''}<div class="err" data-err="${id}"></div></div>`}
+function progSel(id,cur,noShared){const o=Object.entries(PROGS).map(([k,v])=>[k,v.name]);if(!noShared)o.push(['*','Shared across programmes']);return field(id,'Programme',`<select id="${id}">${opts(o,cur||(S.prog!=='all'?S.prog:''),'Choose…')}</select>`,'',1)}
+function opts(list,sel,ph){return (ph!=null?`<option value="">${ph}</option>`:'')+list.map(o=>{const [v,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(l)}</option>`}).join('')}
+function setErr(id,msg){const f=document.querySelector(`[data-fr="${id}"]`);if(!f)return;f.classList.toggle('bad',!!msg);const e=f.querySelector('.err');if(e)e.textContent=msg||''}
+const val=id=>{const e=document.getElementById(id);return e?(e.type==='checkbox'?e.checked:e.value.trim()):''};
+
+/* mapping form */
+let MF=null;
+function openMapForm(existing,presetCode){
+  const e=existing||(presetCode?find('code',presetCode):null);
+  MF={edit:existing?existing.id:(presetCode||null),picked:e&&e.target?{sys:e.target.sys,code:e.target.code}:null,tsys:e&&e.target?e.target.sys:'snomed',type:e&&e.target||!e?'map':'local'};
+  if(existing&&!existing.target)MF.type='local'; if(presetCode)MF.type='map';
+  S.drawer={mode:'form',kind:'code'};
+  layer(`<div class="dh"><div><div class="kind">${existing&&existing.status!=='published'?'Edit':existing?'New version of':'New'} local code</div><h3>${e?esc(e.id):'Local code and its standard mapping'}</h3></div><button class="x" data-close aria-label="Close">×</button></div>
+  <form class="db" id="mf" novalidate>
+   <fieldset class="fs"><legend>1. Local code</legend>
+    <div class="row2">${field('f-sys','Local code system',`<select id="f-sys">${opts(DB.cs.map(c=>[c.id,c.id+' · '+c.title]).concat([['__new','+ New code system…']]),e?e.system:'','Choose…')}</select>`,'The system that owns this code.',1)}
+    ${field('f-res','Kind of code',`<select id="f-res">${opts([['Condition','Diagnosis'],['Procedure','Procedure'],['Observation','Lab test or observation'],['Medication','Medication'],['Encounter','Encounter or visit'],['Immunization','Immunisation']],e?e.res:'','Choose…')}</select>`,'Groups codes for reviewers. Works for any source, not only FHIR.',1)}</div>
+    <div id="newcs" class="fs" hidden style="background:var(--surface-2)"><legend>New code system</legend>
+     ${progSel('nc-prog',null)}
+     <div class="row2">${field('nc-id','Identifier',`<input type="text" id="nc-id" class="mono" autocomplete="off" placeholder="PHARM_LK_01">`,'Capital letters, digits and underscores.',1)}${field('nc-title','Name',`<input type="text" id="nc-title" placeholder="Pharmacy local codes">`,'',1)}</div>
+     <div class="row2">${field('nc-stype','Kind of source system',`<select id="nc-stype">${opts(STYPES,'','Choose…')}</select>`,'',1)}${field('nc-case','Are codes case sensitive?',`<select id="nc-case">${opts([['yes','Yes, A1 and a1 differ'],['no','No, A1 and a1 are the same']],'yes')}</select>`,'',1)}</div>
+     ${field('nc-owner','Maintained by',`<input type="text" id="nc-owner" placeholder="Team that adds and retires these codes">`,'',1)}
+     ${field('nc-desc','What it covers',`<textarea id="nc-desc" placeholder="Which source system uses these codes"></textarea>`,'Reviewers approve the code system together with this code.',1)}
+    </div>
+    ${field('f-code','Code',`<input type="text" id="f-code" autocomplete="off" value="${e?esc(e.id):''}" ${e&&!presetCode&&existing?'readonly':''} placeholder="Exactly as the source writes it">`,'Copy it exactly as the source system stores it, including case and punctuation. Unique inside the code system.',1)}
+    ${field('f-display','Name',`<input type="text" id="f-display" value="${e?esc(e.display):''}" placeholder="What the source system calls it">`,'',1)}
+   </fieldset>
+   <fieldset class="fs"><legend>2. Standard mapping</legend>
+    <div class="choice"><input type="radio" name="mt" id="mt-map" value="map" ${MF.type==='map'?'checked':''}><label for="mt-map">Map to a standard code</label></div>
+    <div class="choice"><input type="radio" name="mt" id="mt-local" value="local" ${MF.type==='local'?'checked':''}><label for="mt-local">Keep local only. No standard equivalent exists.</label></div>
+    <div id="mapblock" style="margin-top:12px">
+     <div class="row2">${field('f-tsys','Standard system',`<select id="f-tsys">${opts(Object.entries(SYS).map(([k,s])=>[k,s.label]),MF.tsys)}</select>`,'',1)}
+     ${field('f-search','Find standard code',`<input type="text" id="f-search" autocomplete="off" placeholder="Type a name or code">`,'Looked up on the country terminology server.',1)}</div>
+     <div id="f-results"></div><div id="f-picked" style="margin-bottom:12px"></div>
+     <div data-fr="f-pick"><div class="err" data-err="f-pick"></div></div>
+     ${field('f-equiv','How close is the match?',`<select id="f-equiv">${opts(Object.entries(EQUIV).map(([k,v])=>[k,v.l+' · '+v.d]),e&&e.equiv||'','Choose…')}</select>`,'No default. Pick the honest value.',1)}
+     ${field('f-reason','Reason for this mapping',`<textarea id="f-reason" placeholder="Why these two codes mean the same thing">${e&&e.rationale?esc(e.rationale):''}</textarea>`,'',1)}
+     <div class="choice"><input type="checkbox" id="f-clin" ${e&&e.clin?'checked':''}><label for="f-clin">Needs clinician review before approval</label></div>
+    </div>
+    <div class="outcome" id="outcome" style="margin-top:12px" aria-live="polite"></div>
+   </fieldset>
+   ${existing&&['published','approved'].includes(existing.status)?bumpRadios():''}
+   ${field('f-summary',existing?'What changed':'Why it is needed',`<input type="text" id="f-summary" value="" placeholder="One line for the reviewers">`,'',1)}
+  </form>
+  <div class="df"><span class="why" id="mf-why"></span><button class="btn" data-close>Cancel</button><button class="btn" data-save="draft">Save draft (branch)</button><button class="btn pri" data-save="submit">Submit (opens pull request)</button></div>`);
+  mapDyn();
+}
+function toggleNewCs(){const n=document.getElementById('newcs');if(n)n.hidden=val('f-sys')!=='__new'}
+function mapDyn(){
+  const local=document.getElementById('mt-local').checked;
+  MF.type=local?'local':'map';
+  document.getElementById('mapblock').hidden=local;
+  const eq=val('f-equiv'),pk=MF.picked,r=pk&&lookup(pk.sys,pk.code);
+  document.getElementById('f-picked').innerHTML=pk&&r?`<div class="picked"><div>${sysChip(pk.sys)} <b class="mono">${esc(pk.code)}</b> ${esc(r.display)}</div><button type="button" class="btn" data-unpick>Change</button></div>`:'';
+  document.getElementById('f-search').closest('.fr').hidden=!!pk;
+  let t='';
+  if(local)t='<b>In ETL:</b> records with this code load as terminology-unresolved and join the Unmapped list for a Terminology Specialist.';
+  else if(!eq)t='<b>In ETL:</b> choose how close the match is to see what ETL will do.';
+  else if(EQUIV[eq].auto)t='<b>In ETL:</b> records with this code are converted to the standard code automatically once the mapping is published.';
+  else t='<b>In ETL:</b> records with this code are held for review. They are not converted automatically.';
+  const kind=val('f-res'),ts=val('f-tsys');const exp={Condition:['icd10','snomed'],Procedure:['snomed'],Observation:['loinc','snomed'],Medication:['rxnorm','snomed'],Immunization:['snomed'],Encounter:['snomed']}[kind];
+  if(!local&&exp&&!exp.includes(ts))t+='<div class="dim" style="margin-top:6px"><b>Check:</b> '+esc(RESL[kind]||kind)+' codes usually map to '+exp.map(k=>SYS[k].short).join(' or ')+'. Keep '+esc(SYS[ts].short)+' only if that is deliberate.</div>';
+  document.getElementById('outcome').innerHTML=t;
+}
+function mapResults(){
+  const q=val('f-search').toLowerCase(),sys=val('f-tsys');
+  const rs=REF.filter(r=>r.sys===sys&&(!q||(r.code+' '+r.display).toLowerCase().includes(q))).slice(0,6);
+  document.getElementById('f-results').innerHTML=rs.length?`<div class="res" style="margin-bottom:12px">${rs.map(r=>`<button type="button" data-pick="${r.sys}|${r.code}" ${r.active?'':'disabled'}><span class="mono">${esc(r.code)}</span><span>${esc(r.display)}${r.active?'':' <span class="chip bad">Inactive in GPS</span>'}</span></button>`).join('')}</div>`:`<div class="dim" style="margin-bottom:12px">No match on the country terminology server.</div>`;
+}
+function validateMap(strict){
+  const errs={};const code=val('f-code'),sys=val('f-sys');
+  if(sys==='__new'){
+    const nid=val('nc-id').toUpperCase();
+    if(!/^[A-Z][A-Z0-9_]{3,31}$/.test(nid))errs['nc-id']='Use 4 to 32 capital letters, digits or underscores, starting with a letter.';
+    else if(find('cs',nid))errs['nc-id']='This identifier is already used.';
+    if(val('nc-title').length<3)errs['nc-title']='Enter a name.';
+    if(!val('nc-prog'))errs['nc-prog']='Choose the programme, or Shared.';
+    if(!val('nc-stype'))errs['nc-stype']='Choose the kind of source system.';
+    if(strict){if(val('nc-owner').length<3)errs['nc-owner']='Say who maintains the codes.';if(val('nc-desc').length<10)errs['nc-desc']='Describe what it covers in a sentence.'}
+  }
+  if(!sys)errs['f-sys']='Choose the local code system, or add a new one.';
+  if(!code||code.length>64||!/^\S+( \S+)*$/.test(code))errs['f-code']='Enter the code exactly as the source writes it: 1 to 64 characters, no spaces at the ends, no double spaces.';
+  else{const cx=find('cs',sys),ci=cx&&cx.cased===false;if(DB.code.some(c=>c.system===sys&&c.id!==MF.edit&&(ci?c.id.toLowerCase()===code.toLowerCase():c.id===code)))errs['f-code']='This code already exists in '+sys+(ci?' (codes in this system are not case sensitive).':'.');}
+  if(val('f-display').length<3)errs['f-display']='Enter the name used by the source system.';
+  if(strict){
+    if(!val('f-res'))errs['f-res']='Choose the kind of code.';
+    if(val('f-summary').length<4)errs['f-summary']='Say in a few words why this code is needed or what changed.';
+    if(MF.type==='map'){
+      if(!MF.picked)errs['f-pick']='Pick a standard code from the list.';
+      if(!val('f-equiv'))errs['f-equiv']='Choose how close the match is.';
+      if(val('f-reason').length<10)errs['f-reason']='Give a reason of at least a few words.';
+    }
+  }
+  ['f-sys','f-code','f-display','f-res','f-pick','f-equiv','f-reason','f-summary','nc-prog','nc-id','nc-stype','nc-title','nc-owner','nc-desc'].forEach(k=>setErr(k,errs[k]));
+  return errs;
+}
+function saveMap(mode){
+  const errs=validateMap(mode==='submit');if(Object.keys(errs).length){const k=Object.keys(errs)[0];const el=document.getElementById(k);if(el)el.focus();document.getElementById('mf-why').textContent='Fix the highlighted fields.';return}
+  const code=val('f-code');
+  let sysId=val('f-sys');
+  if(sysId==='__new'){
+    const ncs=Object.assign(mk({}),{kind:'cs',prog:val('nc-prog'),id:val('nc-id').toUpperCase(),stype:val('nc-stype'),cased:val('nc-case')!=='no',title:val('nc-title'),owner:val('nc-owner'),desc:val('nc-desc'),version:'0.1.0',by:S.me,status:'draft'});
+    DB.cs.push(ncs);log('Saved draft',ncs);
+    if(mode==='submit'){ncs.status='submitted';post(ncs,'Submitted together with local code '+code+'.');log('Submitted for review',ncs)}
+    sysId=ncs.id;
+  }
+  const csx=find('cs',sysId)||{};
+  const base={kind:'code',prog:csx.prog==='*'?(S.prog!=='all'?S.prog:'*'):(csx.prog||'*'),id:code,system:sysId,display:val('f-display'),res:val('f-res'),target:MF.type==='map'&&MF.picked?{sys:MF.picked.sys,code:MF.picked.code}:null,equiv:MF.type==='map'?val('f-equiv')||null:null,clin:MF.type==='map'&&val('f-clin'),rationale:val('f-reason'),summary:val('f-summary')};
+  let it=find('code',MF.edit||code);
+  if(it){const wasLive=['published','approved'].includes(it.status);keepLive(it);Object.assign(it,base);if(wasLive)it.version=bump(it.version,(document.querySelector('input[name=bump]:checked')||{}).value||'minor');it.appr={steward:null,owner:null}}
+  else{it=Object.assign(mk({}),base,{version:'0.1.0',by:S.me,status:'draft',thread:[]});DB.code.push(it)}
+  it.by=S.me;it.status='draft';
+  if(mode==='submit'){const f=failing(it);if(f.length){toast(f[0].t);openMapForm(it);return}it.status='submitted';post(it,'Submitted for review.');log('Submitted for review',it)}
+  else log('Saved draft',it);
+  toast(mode==='submit'?'Submitted for review':'Draft saved');S.route='terminology';S.tabs.terminology='codes';render();openDetail(keyOf(it));
+}
+
+/* generic forms: kpi and element */
+let GF=null;
+function openGeneric(kind,existing){
+  GF={kind,edit:existing?existing.id:null};S.drawer={mode:'form',kind};
+  const vsOpts=DB.vs.map(v=>['vs:'+v.id,v.id+' · '+STATUS[v.status][0].toLowerCase()]);
+  let h='';
+  if(kind==='kpi'){
+    const k=existing||{title:'',definition:'',unit:'%',denom:'',numer:'',win:'none',dims:['year','age_band'],cad:'Annually',sup:5};
+    h=`<fieldset class="fs"><legend>Definition</legend>
+    ${progSel('g-prog',k.prog,true)}
+    ${field('g-title','Name',`<input type="text" id="g-title" value="${esc(k.title)}" placeholder="Short name for the indicator">`,'Short and unique.',1)}
+    ${field('g-short','Short name',`<input type="text" id="g-short" maxlength="50" value="${esc(k.short||'')}" placeholder="Used in DHIS2 lists, 50 characters at most">`,'DHIS2 needs a short name that is unique and at most 50 characters. Leave blank to use the start of the name.',0)}
+    ${field('g-def','Plain-language definition',`<textarea id="g-def">${esc(k.definition)}</textarea>`,'Say who is counted and what counts as done. It becomes the DHIS2 description.',1)}
+    <div class="row2">${field('g-unit','Indicator type',`<select id="g-unit">${opts([['%','Percentage (x 100)'],['per 1,000','Per 1,000'],['per 100,000','Per 100,000'],['count','Number']],k.unit)}</select>`,'The DHIS2 indicator type and its factor.',1)}${field('g-dec','Decimals',`<input type="number" id="g-dec" min="0" max="5" value="${k.dec!=null?k.dec:''}" placeholder="${k.unit==='%'||!k.unit?'1':'0'}">`,'0 to 5. Blank uses the default for the type.',0)}</div>
+    ${field('g-cad','Reporting cadence',`<select id="g-cad">${opts(['Monthly','Quarterly','Annually'],k.cad)}</select>`,'Becomes the DHIS2 period type.',1)}</fieldset>
+    <fieldset class="fs"><legend>Rule</legend>
+    ${field('g-denom','Denominator: who is counted',`<select id="g-denom">${opts(vsOpts,k.denom,'Choose a ValueSet…')}</select>`,'Patients with a record in this ValueSet.',1)}
+    ${field('g-numer','Numerator: who counts as done',`<select id="g-numer">${opts(vsOpts.concat(DB.el.map(e=>['el:'+e.id,e.id+' has a value'])),k.numer,'Choose a rule…')}</select>`,'A ValueSet, or a data element that has a value.',1)}
+    ${field('g-win','Time window',`<select id="g-win">${opts([['none','None (counts any date)'],['m6','Within 6 months of the index event'],['m12','Within 12 months of the index event'],['y5','Within 5 years of the index event']],k.win)}</select>`,'Without a window the result depends on how long ago the index event happened. The index event is the one that starts the denominator, such as a diagnosis or a notification.',0)}
+    <div class="fr"><span class="lab">Breakdowns</span>${Object.entries(dimLabel).map(([d,l])=>`<div class="choice"><input type="checkbox" id="g-d-${d}" ${k.dims.includes(d)?'checked':''}><label for="g-d-${d}">${l} <span class="chip muted">${DIMROLE[d]} in DHIS2</span></label></div>`).join('')}<div class="hint">In DHIS2 the year is the period and the district is the org unit hierarchy, so only age band and sex become categories. Facility is added from the facility registry. Do not add it here.</div></div>
+    ${field('g-sup','Hide cells with this many or fewer patients',`<input type="number" id="g-sup" min="1" value="${k.sup}">`,'Small-cell protection. Minimum 5 until the programme decides otherwise.',1)}</fieldset>`;
+  }else{
+    const e=existing||{id:'',title:'',def:'',type:'code',card:'0..*',res:'',path:'',src:['csv'],vs:'',strength:'required',nulls:[],sens:'Clinical'};
+    h=`<fieldset class="fs"><legend>Element</legend>
+    ${progSel('g-prog',e.prog)}
+    <div class="row2">${field('g-id','Name',`<input type="text" id="g-id" value="${esc(e.id)}" ${existing?'readonly':''} placeholder="snake_case_name">`,'Lower case with underscores. Cannot change later.',1)}${field('g-title','Label',`<input type="text" id="g-title" value="${esc(e.title)}">`,'',1)}</div>
+    ${field('g-def','Definition',`<textarea id="g-def">${esc(e.def)}</textarea>`,'',1)}
+    <div class="row2">${field('g-type','Type',`<select id="g-type">${opts(['code','date','dateTime','boolean','integer','decimal','string'],e.type)}</select>`,'',1)}${field('g-card','How many',`<select id="g-card">${opts([['1..1','Exactly one'],['0..1','Zero or one'],['0..*','Any number'],['1..*','At least one']],e.card)}</select>`,'',1)}</div></fieldset>
+    <fieldset class="fs"><legend>Where the value comes from</legend>
+    <div class="fr" data-fr="g-srcs"><label>Source forms *</label><div class="choices">${SRCT.map(([k,l])=>`<div class="choice"><input type="checkbox" id="g-s-${k}" ${(e.src&&e.src.length?e.src:['fhir']).includes(k)?'checked':''}><label for="g-s-${k}">${l}</label></div>`).join('')}</div><div class="hint">Data can arrive as CSV, a SQL dump, FHIR or something else. The element is defined once, here. The column name is the identifier above.</div><div class="err" data-err="g-srcs"></div></div>
+    ${field('g-hint','Source hint',`<input type="text" id="g-hint" value="${esc(e.hint||'')}" placeholder="Example: column case_class in the monthly export">`,'Optional. Helps the ETL team find it.',0)}
+    <div class="row2">${field('g-res','FHIR resource (optional)',`<select id="g-res">${opts(['Patient','Encounter','Condition','Procedure','Observation','MedicationRequest','Immunization'],e.res,'Not from FHIR')}</select>`,'',0)}${field('g-path','FHIR path (optional)',`<input type="text" id="g-path" class="mono" value="${esc(e.path||'')}" placeholder="Procedure.code">`,'Only when a FHIR source exists. Starts with the resource name.',0)}</div>
+    <div class="row2">${field('g-vs','Bound ValueSet',`<select id="g-vs">${opts(DB.vs.map(v=>[v.id,v.id+' · '+STATUS[v.status][0].toLowerCase()]),e.vs,'None')}</select>`,'Required when the type is code.',0)}${field('g-str','Binding strength',`<select id="g-str">${opts([['required','Required'],['extensible','Extensible'],['preferred','Preferred']],e.strength)}</select>`,'',0)}</div></fieldset>
+    <fieldset class="fs"><legend>Handling</legend>
+    <div class="fr"><span class="lab">When no value is present, allow</span>${[['not_recorded','Not recorded'],['unknown','Unknown'],['not_applicable','Not applicable']].map(([v,l])=>`<div class="choice"><input type="checkbox" id="g-n-${v}" ${e.nulls.includes(v)?'checked':''}><label for="g-n-${v}">${l}</label></div>`).join('')}</div>
+    ${field('g-sens','Data class',`<select id="g-sens">${opts(['Clinical','Quasi-identifier','Direct identifier'],e.sens)}</select>`,'Decides how it is shown in BI and research extracts.',1)}</fieldset>`;
+  }
+  if(kind==='kpi'){const k=existing||{};h+=`<fieldset class="fs"><legend>Publishing</legend>
+    ${field('g-ds','Dataset it reads',`<select id="g-ds">${opts(DB.ds.map(d=>[d.id,d.id+' · '+d.title+(d.cert?'':' (not certified)')]),k.ds,'Choose a schema…')}</select>`,'From the Schemas register. DHIS2 sync waits until the dataset is certified.',1)}
+    <div class="row2">${field('g-pat','How DHIS2 receives it',`<select id="g-pat">${opts(Object.entries(PATTERN),k.pattern||'cadence')}</select>`,'',1)}${field('g-org','Lowest org unit level',`<select id="g-org">${opts(['National','Province','District','Facility'],k.org||'District')}</select>`,'',1)}</div></fieldset>
+    <fieldset class="fs"><legend>How this appears in DHIS2</legend><p class="hint" style="margin:0 0 8px">Generated from the answers above. Nothing to fill in here.</p><div id="d2prev"></div></fieldset>`}
+  const ex=existing;
+  h+=`<fieldset class="fs"><legend>Version</legend>${ex?`<div class="fr"><span class="lab">Version bump</span>${[['patch','Patch · wording only'],['minor','Minor · compatible change'],['major','Major · breaks consumers']].map(([v,l],i)=>`<div class="choice"><input type="radio" name="bump" id="g-b-${v}" value="${v}" ${i===1?'checked':''}><label for="g-b-${v}">${l}</label></div>`).join('')}</div>`:'<div class="dim" style="margin-bottom:10px">New items start at v0.1.0.</div>'}${field('g-sum','What changed',`<input type="text" id="g-sum" placeholder="One line for the reviewers">`,'',1)}</fieldset>`;
+  layer(`<div class="dh"><div><div class="kind">${existing?'New version of':'New'} ${KIND[kind].toLowerCase()}</div><h3>${existing?esc(existing.id):KIND[kind]}</h3></div><button class="x" data-close aria-label="Close">×</button></div><form class="db" id="gf" novalidate>${h}</form>
+  <div class="df"><span class="why" id="gf-why"></span><button class="btn" data-close>Cancel</button><button class="btn" data-gsave="draft">Save draft (branch)</button><button class="btn pri" data-gsave="submit">Submit (opens pull request)</button></div>`);
+  if(kind==='kpi')d2update();
+}
+function validateGen(strict){
+  const k=GF.kind,errs={};
+  if(!val('g-prog'))errs['g-prog']='Choose the programme.';
+  if(val('g-title').length<3)errs['g-title']='Enter a name.';
+  if(k==='el'){const id=val('g-id');if(!/^[a-z][a-z0-9_]{2,40}$/.test(id))errs['g-id']='Lower case letters, digits and underscores, starting with a letter.';else if(!GF.edit&&find('el',id))errs['g-id']='This name is already used.';
+    if(!['csv','sql','fhir','other'].some(k=>document.getElementById('g-s-'+k)&&document.getElementById('g-s-'+k).checked))errs['g-srcs']='Choose at least one source form.';
+    if(val('g-path')||val('g-res')){if(!val('g-res'))errs['g-res']='Choose the FHIR resource, or clear the path.';else if(!val('g-path').startsWith(val('g-res')+'.'))errs['g-path']='Path must start with '+val('g-res')+'.';}
+    if(strict&&val('g-type')==='code'&&!val('g-vs'))errs['g-vs']='Choose the ValueSet this code is bound to.';}
+  if(k==='kpi'){if(val('g-short').length>50)errs['g-short']='50 characters at most.';else if(val('g-short')&&DB.kpi.some(x=>x.id!==GF.edit&&kShort(x).toLowerCase()===val('g-short').toLowerCase()))errs['g-short']='Another KPI already uses this short name.';
+    if(val('g-dec')!==''&&!(Number.isInteger(+val('g-dec'))&&+val('g-dec')>=0&&+val('g-dec')<=5))errs['g-dec']='Enter a whole number from 0 to 5.';
+    if(!val('g-ds'))errs['g-ds']='Choose the dataset this KPI reads.';if(!val('g-denom'))errs['g-denom']='Choose who is counted.';if(!val('g-numer'))errs['g-numer']='Choose who counts as done.';
+    if(val('g-denom')&&val('g-denom')===val('g-numer'))errs['g-numer']='Numerator and denominator are the same rule.';
+    if(!(+val('g-sup')>=1))errs['g-sup']='Enter 1 or more.';else if(strict&&+val('g-sup')<5)errs['g-sup']='Use at least 5.';}
+  if(strict){if(val('g-def').length<10)errs['g-def']='Describe it in a sentence.';if(val('g-sum').length<4)errs['g-sum']='Say what changed.';if(k==='el'&&!val('g-title'))errs['g-title']='Enter a label.'}
+  ['g-prog','g-title','g-short','g-dec','g-id','g-def','g-srcs','g-path','g-res','g-vs','g-ds','g-denom','g-numer','g-sup','g-sum'].forEach(i=>setErr(i,errs[i]));
+  return errs;
+}
+function bump(v,t){let [a,b,c]=v.split('.').map(Number);if(t==='major')return (a+1)+'.0.0';if(t==='minor')return a+'.'+(b+1)+'.0';return a+'.'+b+'.'+(c+1)}
+function saveGen(mode){
+  const errs=validateGen(mode==='submit');if(Object.keys(errs).length){const k=Object.keys(errs)[0];const el=document.getElementById(k);if(el)el.focus();document.getElementById('gf-why').textContent='Fix the highlighted fields.';return}
+  const kind=GF.kind;let it;
+  const sum=val('g-sum');
+  if(kind==='kpi'){
+    const dims=Object.keys(dimLabel).filter(d=>val('g-d-'+d));
+    const d={prog:val('g-prog'),title:val('g-title'),short:val('g-short'),dec:val('g-dec')===''?null:+val('g-dec'),definition:val('g-def'),unit:val('g-unit'),cad:val('g-cad'),denom:val('g-denom'),numer:val('g-numer'),win:val('g-win'),dims,sup:+val('g-sup'),ds:val('g-ds'),pattern:val('g-pat'),org:val('g-org'),summary:sum};
+    it=GF.edit?find('kpi',GF.edit):null;
+    if(it){const t=(document.querySelector('input[name=bump]:checked')||{}).value||'minor';keepLive(it);Object.assign(it,d);it.version=['published','approved'].includes(it.status)?bump(it.version,t):it.version}
+    else{const n=DB.kpi.filter(x=>x.prog===d.prog).length+1;it=Object.assign(mk({}),d,{kind:'kpi',id:'NDD-'+d.prog+'-'+String(n).padStart(3,'0'),version:'0.1.0'});DB.kpi.push(it)}
+  }else{
+    const d={prog:val('g-prog'),title:val('g-title'),def:val('g-def'),type:val('g-type'),card:val('g-card'),res:val('g-res'),path:val('g-path'),src:['csv','sql','fhir','other'].filter(k=>document.getElementById('g-s-'+k).checked),hint:val('g-hint'),vs:val('g-vs'),strength:val('g-vs')?val('g-str'):'',nulls:['not_recorded','unknown','not_applicable'].filter(n=>val('g-n-'+n)),sens:val('g-sens'),summary:sum};
+    it=GF.edit?find('el',GF.edit):null;
+    if(it){const t=(document.querySelector('input[name=bump]:checked')||{}).value||'minor';const live=['published','approved'].includes(it.status);keepLive(it);Object.assign(it,d);if(live)it.version=bump(it.version,t)}
+    else{it=Object.assign(mk({}),d,{kind:'el',id:val('g-id'),version:'0.1.0'});DB.el.push(it)}
+  }
+  it.by=S.me;it.status='draft';it.appr={steward:null,owner:null};
+  if(mode==='submit'){const f=failing(it);if(f.length){toast(f[0].t);openGeneric(kind,it);return}it.status='submitted';post(it,'Submitted for review. '+sum);log('Submitted for review',it)}else log('Saved draft',it);
+  toast(mode==='submit'?'Submitted for review':'Draft saved');render();openDetail(keyOf(it));
+}
+
+/* code system form */
+let CF=null;
+function bumpRadios(){return `<div class="fr"><span class="lab">Version bump</span>${[['patch','Patch · wording only'],['minor','Minor · compatible change'],['major','Major · breaks consumers']].map(([v,l],i)=>`<div class="choice"><input type="radio" name="bump" id="b-${v}" value="${v}" ${i===1?'checked':''}><label for="b-${v}">${l}</label></div>`).join('')}</div>`}
+function openCsForm(existing){
+  CF={edit:existing?existing.id:null};S.drawer={mode:'form',kind:'cs'};
+  const e=existing||{id:'',title:'',owner:'',desc:''};
+  layer(`<div class="dh"><div><div class="kind">${existing?'New version of':'New'} local code system</div><h3>${existing?esc(e.id):'Local code system'}</h3></div><button class="x" data-close aria-label="Close">×</button></div>
+  <form class="db" id="cf" novalidate>
+   <fieldset class="fs"><legend>Code system</legend>
+    ${progSel('c-prog',e.prog)}
+    ${field('c-id','Identifier',`<input type="text" id="c-id" class="mono" value="${esc(e.id)}" ${existing?'readonly':''} placeholder="SRC_LOCAL_01" autocomplete="off">`,'Capital letters, digits and underscores, starting with a letter. Cannot change later.',1)}
+    <div class="fr"><label>Canonical URL (generated)</label><div class="mono dim" id="c-url" style="overflow-wrap:anywhere">${esc(csUrl(e.id||'ID'))}</div><div class="hint">FHIR id: <span class="mono" id="c-fid">${esc(fhirId(e.id||'id'))}</span>. Underscores become dashes because a FHIR id cannot contain them.</div></div>
+    ${field('c-title','Name',`<input type="text" id="c-title" value="${esc(e.title)}" placeholder="Source system local codes">`,'',1)}
+    <div class="row2">${field('c-stype','Kind of source system',`<select id="c-stype">${opts(STYPES,e.stype,'Choose…')}</select>`,'Helps ETL and reviewers find where the codes come from.',1)}${field('c-case','Are codes case sensitive?',`<select id="c-case">${opts([['yes','Yes, A1 and a1 are different codes'],['no','No, A1 and a1 are the same code']],e.cased===false?'no':'yes')}</select>`,'Answer from how the source system stores them.',1)}</div>
+    ${field('c-owner','Maintained by',`<input type="text" id="c-owner" value="${esc(e.owner)}" placeholder="Team or unit that adds and retires these codes">`,'Reviewers contact this team about changes.',1)}
+    ${field('c-desc','What it covers',`<textarea id="c-desc" placeholder="Which source system uses these codes, and for what">${esc(e.desc)}</textarea>`,'',1)}
+   </fieldset>
+   <fieldset class="fs"><legend>Version</legend>${existing?bumpRadios():'<div class="dim" style="margin-bottom:10px">New code systems start at v0.1.0.</div>'}${field('c-sum','What changed',`<input type="text" id="c-sum" placeholder="One line for the reviewers">`,'',1)}</fieldset>
+  </form>
+  <div class="df"><span class="why" id="cf-why"></span><button class="btn" data-close>Cancel</button><button class="btn" data-csave="draft">Save draft (branch)</button><button class="btn pri" data-csave="submit">Submit (opens pull request)</button></div>`);
+}
+function validateCs(strict){
+  const errs={},id=val('c-id');
+  if(!/^[A-Z][A-Z0-9_]{3,31}$/.test(id))errs['c-id']='Use 4 to 32 capital letters, digits or underscores, starting with a letter.';
+  else if(!CF.edit&&find('cs',id))errs['c-id']='This identifier is already used.';
+  if(!val('c-prog'))errs['c-prog']='Choose the programme this belongs to, or Shared.';
+  if(!val('c-stype'))errs['c-stype']='Choose the kind of source system.';
+  if(val('c-title').length<3)errs['c-title']='Enter a name.';
+  if(val('c-owner').length<3)errs['c-owner']='Say who maintains the codes.';
+  if(strict){if(val('c-desc').length<10)errs['c-desc']='Describe what it covers in a sentence.';if(val('c-sum').length<4)errs['c-sum']='Say what changed.'}
+  ['c-prog','c-id','c-stype','c-title','c-owner','c-desc','c-sum'].forEach(k=>setErr(k,errs[k]));return errs;
+}
+function saveCs(mode){
+  const errs=validateCs(mode==='submit');if(Object.keys(errs).length){const el=document.getElementById(Object.keys(errs)[0]);if(el)el.focus();document.getElementById('cf-why').textContent='Fix the highlighted fields.';return}
+  const d={prog:val('c-prog'),stype:val('c-stype'),cased:val('c-case')!=='no',title:val('c-title'),owner:val('c-owner'),desc:val('c-desc'),summary:val('c-sum')};
+  let it=CF.edit?find('cs',CF.edit):null;
+  if(it){const live=['published','approved'].includes(it.status);const t=(document.querySelector('input[name=bump]:checked')||{}).value||'minor';keepLive(it);Object.assign(it,d);if(live)it.version=bump(it.version,t)}
+  else{it=Object.assign(mk({}),d,{kind:'cs',id:val('c-id'),version:'0.1.0'});DB.cs.push(it)}
+  it.by=S.me;it.status='draft';it.appr={steward:null,owner:null};
+  if(mode==='submit'){const f=failing(it);if(f.length){toast(f[0].t);openCsForm(it);return}it.status='submitted';post(it,'Submitted for review. '+d.summary);log('Submitted for review',it)}else log('Saved draft',it);
+  toast(mode==='submit'?'Submitted for review':'Draft saved');S.route='terminology';S.tabs.terminology='cs';render();openDetail(keyOf(it));
+}
+
+/* ValueSet form */
+let VF=null;
+function openVsForm(existing){
+  VF={edit:existing?existing.id:null,members:existing?existing.members.map(m=>m.slice()):[]};S.drawer={mode:'form',kind:'vs'};
+  const e=existing||{id:'',title:'',desc:''};
+  layer(`<div class="dh"><div><div class="kind">${existing?'New version of':'New'} ValueSet</div><h3>${existing?esc(e.id):'ValueSet'}</h3></div><button class="x" data-close aria-label="Close">×</button></div>
+  <form class="db" id="vf" novalidate>
+   <fieldset class="fs"><legend>1. About this ValueSet</legend>
+    ${progSel('v-prog',e.prog)}
+    <div class="row2">${field('v-id','Identifier',`<input type="text" id="v-id" class="mono" value="${esc(e.id)}" ${existing?'readonly':''} placeholder="programme-short-name" autocomplete="off">`,'Lower case with dashes. Cannot change later.',1)}
+    ${field('v-title','Name',`<input type="text" id="v-title" value="${esc(e.title)}" placeholder="A name people will recognise">`,'',1)}</div>
+    <div class="fr"><label>Canonical URL (generated)</label><div class="mono dim" id="v-url" style="overflow-wrap:anywhere">${esc(vsUrl(e.id||'id'))}</div></div>
+    ${field('v-desc','Purpose',`<textarea id="v-desc" placeholder="Which KPI or data element uses this, and what belongs in it">${esc(e.desc||'')}</textarea>`,'',1)}
+   </fieldset>
+   <fieldset class="fs"><legend>2. Members</legend>
+    <p class="hint" style="margin:0 0 10px">List every code. ValueSets here are not built from filters or hierarchy, so they work on GPS content.</p>
+    <div class="row2">${field('v-sys','Add from',`<select id="v-sys">${opts([['local','Local codes'],...Object.entries(SYS).map(([k,s])=>[k,s.label+' (country server)'])],'local')}</select>`,'',0)}
+    ${field('v-search','Find a code',`<input type="text" id="v-search" autocomplete="off" placeholder="Type a name or code">`,'',0)}</div>
+    <div id="v-results"></div>
+    <div class="hint" id="v-pins" style="margin-bottom:10px"></div>
+    <div data-fr="v-members"><div class="lab" style="font-weight:600;font-size:12.5px;margin-bottom:6px">In this ValueSet (<span id="v-count">0</span>)</div><div id="v-list"></div><div class="err" data-err="v-members"></div></div>
+   </fieldset>
+   <fieldset class="fs"><legend>3. Version</legend>${existing?bumpRadios():'<div class="dim" style="margin-bottom:10px">New ValueSets start at v0.1.0.</div>'}${field('v-sum','What changed',`<input type="text" id="v-sum" placeholder="One line for the reviewers">`,'',1)}</fieldset>
+  </form>
+  <div class="df"><span class="why" id="vf-why"></span><button class="btn" data-close>Cancel</button><button class="btn" data-vsave="draft">Save draft (branch)</button><button class="btn pri" data-vsave="submit">Submit (opens pull request)</button></div>`);
+  vsMembers();vsResults();
+}
+function vsResults(){
+  const el=document.getElementById('v-results');if(!el)return;
+  const sys=val('v-sys'),q=val('v-search').toLowerCase();
+  let rs=sys==='local'?DB.code.map(c=>({sys:'local',code:c.id,display:c.display,active:true})):REF.filter(r=>r.sys===sys);
+  rs=rs.filter(r=>!q||(r.code+' '+r.display).toLowerCase().includes(q)).filter(r=>!VF.members.some(m=>m[0]===r.sys&&m[1]===r.code)).slice(0,6);
+  el.innerHTML=rs.length?`<div class="res" style="margin-bottom:12px">${rs.map(r=>`<button type="button" data-vadd="${r.sys}|${esc(r.code)}" ${r.active?'':'disabled'}><span class="mono">${esc(r.code)}</span><span>${esc(r.display)}${r.active?'':' <span class="chip bad">Inactive in GPS</span>'}</span></button>`).join('')}</div>`:`<div class="dim" style="margin-bottom:12px">${q?'No match, or already added.':'Nothing left to add from this list.'}</div>`;
+}
+function vsMembers(){
+  const l=document.getElementById('v-list');if(!l)return;
+  document.getElementById('v-count').textContent=VF.members.length;const pn=document.getElementById('v-pins');if(pn)pn.innerHTML='<b>Pinned versions:</b> '+pinsText(VF.members)+(VF.members.some(m=>m[0]==='local')&&VF.members.some(m=>m[0]!=='local')?'<br><b>Note:</b> local codes only match data whose code was not converted to a standard code. Prefer standard codes when a mapping exists.':'');
+  l.innerHTML=VF.members.length?table(['System','Code','Name',''],VF.members.map((m,i)=>{const r=m[0]==='local'?null:lookup(m[0],m[1]);const lc=m[0]==='local'?find('code',m[1]):null;return `<tr><td>${m[0]==='local'?'<span class="sys">Local</span>':sysChip(m[0])}</td><td class="mono">${esc(m[1])}</td><td>${esc(r?r.display:lc?lc.display:'')}</td><td><button type="button" class="btn" data-vrm="${i}" aria-label="Remove ${esc(m[1])}">Remove</button></td></tr>`}).join('')):`<div class="empty" style="border:1px dashed var(--line);border-radius:10px">No codes yet. Search above and pick codes to add.</div>`;
+}
+function validateVs(strict){
+  const errs={},id=val('v-id');
+  if(!/^[a-z][a-z0-9-]{2,40}$/.test(id))errs['v-id']='Use lower case letters, digits and dashes, starting with a letter.';
+  else if(!VF.edit&&find('vs',id))errs['v-id']='This identifier is already used.';
+  if(!val('v-prog'))errs['v-prog']='Choose the programme this belongs to, or Shared.';
+  if(val('v-title').length<3)errs['v-title']='Enter a name.';
+  if(strict){if(val('v-desc').length<10)errs['v-desc']='Describe the purpose in a sentence.';if(!VF.members.length)errs['v-members']='Add at least one code.';if(val('v-sum').length<4)errs['v-sum']='Say what changed.'}
+  ['v-prog','v-id','v-title','v-desc','v-members','v-sum'].forEach(k=>setErr(k,errs[k]));return errs;
+}
+function saveVs(mode){
+  const errs=validateVs(mode==='submit');if(Object.keys(errs).length){const el=document.getElementById(Object.keys(errs)[0]);if(el)el.focus();document.getElementById('vf-why').textContent='Fix the highlighted fields.';return}
+  const d={prog:val('v-prog'),title:val('v-title'),desc:val('v-desc'),members:VF.members.map(m=>m.slice()),summary:val('v-sum')};
+  let it=VF.edit?find('vs',VF.edit):null;
+  if(it){const live=['published','approved'].includes(it.status);const t=(document.querySelector('input[name=bump]:checked')||{}).value||'minor';keepLive(it);Object.assign(it,d);delete it.note;if(live)it.version=bump(it.version,t)}
+  else{it=Object.assign(mk({}),d,{kind:'vs',id:val('v-id'),version:'0.1.0'});DB.vs.push(it)}
+  it.by=S.me;it.status='draft';it.appr={steward:null,owner:null};
+  if(mode==='submit'){const f=failing(it);if(f.length){toast(f[0].t);openVsForm(it);return}it.status='submitted';post(it,'Submitted for review. '+d.summary);log('Submitted for review',it)}else log('Saved draft',it);
+  toast(mode==='submit'?'Submitted for review':'Draft saved');S.route='terminology';S.tabs.terminology='vs';render();openDetail(keyOf(it));
+}
+
+/* schema form */
+let DF=null;
+function openDsForm(existing){
+  DF={edit:existing?existing.id:null,cols:existing?existing.cols.map(c=>Object.assign({},c)):[{name:'',type:'string',el:'',key:true}]};S.drawer={mode:'form',kind:'ds'};
+  const e=existing||{id:'',title:'',layer:'mart',grain:''};
+  layer(`<div class="dh"><div><div class="kind">${existing?'New version of':'New'} schema</div><h3>${existing?esc(e.id):'Canonical dataset or mart'}</h3></div><button class="x" data-close aria-label="Close">×</button></div>
+  <form class="db" id="df" novalidate>
+   <fieldset class="fs"><legend>1. Dataset</legend>
+    ${progSel('d-prog',e.prog)}
+    <div class="row2">${field('d-id','Identifier',`<input type="text" id="d-id" class="mono" value="${esc(e.id)}" ${existing?'readonly':''} placeholder="programme_case_mart" autocomplete="off">`,'Lower case with underscores. Cannot change later.',1)}
+    ${field('d-layer','Layer',`<select id="d-layer">${opts([['staging','Staging'],['curated','Curated'],['mart','Mart']],e.layer)}</select>`,'',1)}</div>
+    ${field('d-title','Name',`<input type="text" id="d-title" value="${esc(e.title)}" placeholder="A name people will recognise">`,'',1)}
+    ${field('d-grain','What one row represents',`<input type="text" id="d-grain" value="${esc(e.grain)}" placeholder="One row per patient event">`,'State the grain. KPI counts depend on it.',1)}
+   </fieldset>
+   <fieldset class="fs"><legend>2. Columns</legend>
+    <p class="hint" style="margin:0 0 10px">Link a column to a data element so its type and meaning stay in step. Leave it unlinked for keys and derived fields.</p>
+    <div id="d-cols"></div><div data-fr="d-columns"><div class="err" data-err="d-columns"></div></div>
+    <button type="button" class="btn" data-addcol>Add column</button>
+   </fieldset>
+   <fieldset class="fs"><legend>3. Version</legend>${existing?bumpRadios():'<div class="dim" style="margin-bottom:10px">New schemas start at v0.1.0. The warehouse certifies the dataset after it is built.</div>'}${field('d-sum','What changed',`<input type="text" id="d-sum" placeholder="One line for the reviewers">`,'',1)}</fieldset>
+  </form>
+  <div class="df"><span class="why" id="df-why"></span><button class="btn" data-close>Cancel</button><button class="btn" data-dsave="draft">Save draft (branch)</button><button class="btn pri" data-dsave="submit">Submit (opens pull request)</button></div>`);
+  dsCols();
+}
+function dsCols(){
+  const el=document.getElementById('d-cols');if(!el)return;
+  el.innerHTML=DF.cols.map((c,i)=>`<div class="colrow"><input type="text" class="mono" data-ci="${i}" data-cf="name" value="${esc(c.name)}" placeholder="column_name" aria-label="Column ${i+1} name" autocomplete="off"><select data-ci="${i}" data-cf="type" aria-label="Column ${i+1} type">${opts(COLT,c.type)}</select><select data-ci="${i}" data-cf="el" aria-label="Column ${i+1} data element">${opts(DB.el.map(x=>[x.id,x.id+' · '+x.type]),c.el,'No data element')}</select><label class="choice" style="margin:0"><input type="checkbox" data-ci="${i}" data-cf="key" ${c.key?'checked':''}>Key</label><button type="button" class="btn" data-rmcol="${i}" aria-label="Remove column ${i+1}">×</button></div>`).join('')||'<div class="dim" style="margin-bottom:8px">No columns yet.</div>';
+}
+function validateDs(strict){
+  const errs={},id=val('d-id');
+  if(!val('d-prog'))errs['d-prog']='Choose the programme this belongs to, or Shared.';
+  if(!/^[a-z][a-z0-9_]{2,40}$/.test(id))errs['d-id']='Use lower case letters, digits and underscores, starting with a letter.';
+  else if(!DF.edit&&find('ds',id))errs['d-id']='This identifier is already used.';
+  if(val('d-title').length<3)errs['d-title']='Enter a name.';
+  if(val('d-grain').length<5)errs['d-grain']='Say what one row represents.';
+  const names=DF.cols.map(c=>c.name.trim());
+  if(!DF.cols.length)errs['d-columns']='Add at least one column.';
+  else if(names.some(n=>!/^[a-z][a-z0-9_]*$/.test(n)))errs['d-columns']='Every column needs a lower case name with underscores.';
+  else if(new Set(names).size!==names.length)errs['d-columns']='Column names must be unique.';
+  else{const bad=DF.cols.find(c=>c.el&&find('el',c.el)&&!EL2COL[find('el',c.el).type].includes(c.type));if(bad)errs['d-columns']='Column '+bad.name+' is '+bad.type+', but element '+bad.el+' is '+find('el',bad.el).type+'.'}
+  if(strict&&val('d-sum').length<4)errs['d-sum']='Say what changed.';
+  ['d-prog','d-id','d-title','d-grain','d-columns','d-sum'].forEach(k=>setErr(k,errs[k]));return errs;
+}
+function saveDs(mode){
+  const errs=validateDs(mode==='submit');if(Object.keys(errs).length){const el=document.getElementById(Object.keys(errs)[0]);if(el)el.focus();document.getElementById('df-why').textContent='Fix the highlighted fields.';return}
+  const d={prog:val('d-prog'),title:val('d-title'),layer:val('d-layer'),grain:val('d-grain'),cols:DF.cols.map(c=>({name:c.name.trim(),type:c.type,el:c.el||'',key:!!c.key,note:c.note||''})),summary:val('d-sum')};
+  let it=DF.edit?find('ds',DF.edit):null;
+  if(it){const live=['published','approved'].includes(it.status);const t=(document.querySelector('input[name=bump]:checked')||{}).value||'minor';keepLive(it);Object.assign(it,d);if(live){it.version=bump(it.version,t);it.cert=false}}
+  else{it=Object.assign(mk({}),d,{kind:'ds',id:val('d-id'),version:'0.1.0',cert:false});DB.ds.push(it)}
+  it.by=S.me;it.status='draft';it.appr={steward:null,owner:null};
+  if(mode==='submit'){const f=failing(it);if(f.length){toast(f[0].t);openDsForm(it);return}it.status='submitted';post(it,'Submitted for review. '+d.summary);log('Submitted for review',it)}else log('Saved draft',it);
+  toast(mode==='submit'?'Submitted for review':'Draft saved');S.route='schemas';render();openDetail(keyOf(it));
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-go],[data-open],[data-qtab],[data-ttab],[data-new],[data-map],[data-edit],[data-act],[data-close],[data-save],[data-gsave],[data-dsave],[data-addcol],[data-rmcol],[data-stage],[data-csave],[data-vsave],[data-vadd],[data-vrm],[data-pick],[data-unpick],[data-release],[data-copy]');
+  if(!t)return;const d=t.dataset;
+  if(d.go!==undefined){S.route=d.go;S.q='';closeDrawer();render();try{history.replaceState(null,'','#'+d.go)}catch(_){}}
+  else if(d.open)openDetail(d.open);
+  else if(d.qtab){S.tabs.queue=d.qtab;render()}
+  else if(d.ttab){S.tabs.terminology=d.ttab;S.q='';render()}
+  else if(d.new){d.new==='code'?openMapForm(null):d.new==='vs'?openVsForm(null):d.new==='cs'?openCsForm(null):d.new==='ds'?openDsForm(null):openGeneric(d.new,null)}
+  else if(d.map)openMapForm(null,d.map);
+  else if(d.edit){const it=find(...d.edit.split('|'));it.kind==='code'?openMapForm(it):it.kind==='vs'?openVsForm(it):it.kind==='cs'?openCsForm(it):it.kind==='ds'?openDsForm(it):openGeneric(it.kind,it)}
+  else if(d.act){if(d.act==='changes'){const ta=$('#cmt');if(ta&&ta.value.trim().length<8){setErrBox();return}}act(d.act,d.key)}
+  else if(t.hasAttribute('data-close'))closeDrawer();
+  else if(d.save)saveMap(d.save);
+  else if(d.gsave)saveGen(d.gsave);
+  else if(d.csave)saveCs(d.csave);
+  else if(d.dsave)saveDs(d.dsave);
+  else if(t.hasAttribute('data-addcol')){DF.cols.push({name:'',type:'string',el:'',key:false});dsCols();setErr('d-columns','')}
+  else if(d.rmcol!==undefined){DF.cols.splice(+d.rmcol,1);dsCols()}
+  else if(d.stage)runStage(d.stage);
+  else if(d.vsave)saveVs(d.vsave);
+  else if(d.vadd){const [a,b]=d.vadd.split('|');VF.members.push([a,b]);vsMembers();vsResults();setErr('v-members','')}
+  else if(d.vrm!==undefined){VF.members.splice(+d.vrm,1);vsMembers();vsResults()}
+  else if(d.pick){const [s,c]=d.pick.split('|');MF.picked={sys:s,code:c};setErr('f-pick','');mapDyn();document.getElementById('f-results').innerHTML=''}
+  else if(t.hasAttribute('data-unpick')){MF.picked=null;mapDyn();document.getElementById('f-search').focus();mapResults()}
+  else if(t.hasAttribute('data-release')){
+    const items=releaseItems();items.forEach(i=>{i.status='published';delete i.prev});
+    const note=(document.getElementById('rn')||{}).value||'';RELEASES.unshift({v:'v0.'+relCount+'.0',d:'11 Oct 2026',n:note,c:all().filter(i=>i.status==='published').length,rollout:{etl:'pending',dw:'pending',dhis2:'pending',bi:'pending'}});
+    AUDIT.push({t:'11 Oct now',who:me().name,role:me().role,act:'Tagged release v0.'+relCount+'.0',tgt:items.length+' items'});relCount++;toast('Release tagged');render()}
+  else if(t.hasAttribute('data-copy')){const x=(document.getElementById('yaml')||{}).textContent||'';try{navigator.clipboard.writeText(x).then(()=>toast('Copied'),()=>toast('Select the text to copy'))}catch(_){toast('Select the text to copy')}}
+});
+function setErrBox(){const ta=$('#cmt');if(ta){ta.closest('.fr').classList.add('bad');ta.focus()}}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&S.drawer)closeDrawer();
+  if((e.key==='Enter'||e.key===' ')&&e.target.matches('.card[data-open]')){e.preventDefault();openDetail(e.target.dataset.open)}
+});
+document.addEventListener('input',e=>{
+  const id=e.target.id;
+  if(DF&&S.drawer&&S.drawer.kind==='ds'){const ci=e.target.dataset&&e.target.dataset.ci;if(ci!==undefined&&e.target.dataset.cf==='name')DF.cols[+ci].name=e.target.value;if(id==='d-id')e.target.value=e.target.value.toLowerCase();if(['d-id','d-title','d-grain'].includes(id))validateDs(false)}
+  if(S.drawer&&S.drawer.kind==='vs'&&VF){if(id==='v-search')vsResults();if(id==='v-id'){e.target.value=e.target.value.toLowerCase();const u=document.getElementById('v-url');if(u)u.textContent=vsUrl(e.target.value||'id')}if(['v-id','v-title'].includes(id))validateVs(false)}
+  if(id==='nc-id')e.target.value=e.target.value.toUpperCase();
+  if(S.drawer&&S.drawer.kind==='cs'&&CF){if(id==='c-id'){e.target.value=e.target.value.toUpperCase();const u=document.getElementById('c-url'),f=document.getElementById('c-fid');if(u)u.textContent=csUrl(e.target.value||'ID');if(f)f.textContent=fhirId(e.target.value||'id')}if(['c-id','c-title','c-owner'].includes(id))validateCs(false)}
+  if(id==='q'){S.q=e.target.value;const p=e.target.selectionStart;render();const n=$('#q');n.focus();n.setSelectionRange(p,p)}
+  if(MF&&S.drawer&&S.drawer.kind==='code'){
+    if(id==='f-search')mapResults();
+    if(id==='f-equiv'||id==='mt-map'||id==='mt-local')mapDyn();
+    if(['f-code','f-display','f-reason'].includes(id)){if(id==='f-code')validateMap(false)}
+  }
+  if(GF&&S.drawer&&S.drawer.kind===GF.kind&&id&&id.startsWith('g-')){if(id==='g-res'){const p=$('#g-path');if(p&&!p.value)p.placeholder=e.target.value?e.target.value+'.code':'Procedure.code'}}
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='formsel'){const k=e.target.value;e.target.value='';if(!k)return;S.me=me().author?S.me:'requester';const f={code:()=>openMapForm(null),vs:()=>openVsForm(null),cs:()=>openCsForm(null),kpi:()=>openGeneric('kpi'),el:()=>openGeneric('el'),ds:()=>openDsForm(null)}[k];if(S.me&&!me().author){S.me='requester';render()}f()}
+  const id=e.target.id;
+  if(DF&&S.drawer&&S.drawer.kind==='ds'){const ci=e.target.dataset&&e.target.dataset.ci;if(ci!==undefined){const c=DF.cols[+ci],f=e.target.dataset.cf;c[f]=f==='key'?e.target.checked:e.target.value;if(f==='el'&&c.el){const x=find('el',c.el);if(x){c.type=EL2COL[x.type][0];dsCols()}}}}
+  if(S.drawer&&S.drawer.kind==='vs'&&VF&&id==='v-sys'){document.getElementById('v-search').value='';vsResults()}
+  if(id==='stat'){S.stat=e.target.value;render()}
+  if(id==='prog'){S.prog=e.target.value;closeDrawer();render()}
+  if(id==='persona'){S.me=e.target.value;closeDrawer();render()}
+  if(MF&&S.drawer&&S.drawer.kind==='code'){
+    if(id==='f-sys'){toggleNewCs();if(val('f-sys')==='__new'){const n=document.getElementById('nc-id');if(n)n.focus()}}
+    if(id==='f-tsys'){MF.picked=null;document.getElementById('f-search').value='';mapDyn();mapResults()}
+    if(id==='f-equiv'||id==='mt-map'||id==='mt-local'||id==='f-res')mapDyn();
+  }
+});
+document.addEventListener('focusin',e=>{if(e.target.id==='f-search'&&MF&&S.drawer&&S.drawer.kind==='code')mapResults();if(e.target.id==='v-search'&&VF&&S.drawer&&S.drawer.kind==='vs')vsResults()});
+document.addEventListener('submit',e=>e.preventDefault());
+
+</script>
+
+<script>
+/* ---------- proposal shell: overrides the workbench screens with the V2.4 layout ---------- */
+ROUTES.length=0;
+ROUTES.push(['catalogue','NDD Catalogue'],['kpis','KPI Registry'],['elements','Data Elements'],['terminology','Terminology'],['queue','Review Queue'],['schemas','Schemas'],['releases','Releases'],['audit','Audit Log']);
+TITLES.catalogue=['NDD Catalogue','Released definitions only: KPIs, data elements, ValueSets and local codes. Drafts and items under review stay in the registers.'];
+TITLES.kpis=['KPI Registry','Indicator definitions written as rules over ValueSets. Each version is reviewed before release.'];
+TITLES.elements=['Data Elements','What is collected, where the value comes from (CSV, SQL, FHIR or other), and which ValueSet it is bound to.'];
+TITLES.terminology=['Terminology','Local codes, their mappings to standard codes, and the ValueSets that group them. Standard terminologies stay on the country terminology server.'];
+TITLES.queue=['Review Queue','Everything waiting for a decision. The proposed rule is two approvals, one data steward and one programme owner. You cannot approve what you submitted.'];
+S.me='requester';S.route='terminology';S.tabs.terminology='reg';S.tabs.treg='codes';S.sysf='all';S.rq='';S.rsys='all';S.cq='';S.ctype='all';
+const IC={
+ catalogue:'<path d="M5 20V10M12 20V4M19 20v-7"/>',
+ kpis:'<circle cx="6" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M6 8v4a4 4 0 0 0 4 4h6"/>',
+ elements:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>',
+ terminology:'<path d="M4 5a2 2 0 0 1 2-2h5v17H6a2 2 0 0 0-2 2zM20 5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2z"/>',
+ queue:'<path d="M4 13l2-8h12l2 8M4 13v6h16v-6M4 13h5l1 2h4l1-2h5"/>',
+ schemas:'<path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/>',
+ releases:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/>',
+ audit:'<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>'
+};
+const svg=(k,sz)=>`<svg viewBox="0 0 24 24" width="${sz||20}" height="${sz||20}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
+const NAVSUB={catalogue:'National Data Dictionary',kpis:'Indicator Definitions',elements:'Element Specifications',terminology:'Code Sets & Value Sets',queue:'Pending decisions',schemas:'Canonical datasets',releases:'Rollout & consumers',audit:'Who did what'};
+
+function render(){
+  const nm=all().filter(inProg).filter(needsMe).length;
+  const item=r=>`<button data-go="${r}" ${S.route===r?'aria-current="page"':''} title="${esc(TITLES[r][0])}">${svg(r)}<span class="nt"><b>${esc(ROUTES.find(x=>x[0]===r)[1])}</b><small>${NAVSUB[r]}</small></span>${r==='queue'&&nm?`<span class="badge" aria-label="${nm} waiting for you">${nm}</span>`:''}</button>`;
+  $('#nav').innerHTML=`<div class="gl">CATALOGUE &amp; REGISTRY</div>`+['catalogue','kpis','elements','terminology'].map(item).join('')+`<div class="gl">GOVERNANCE &amp; RELEASE</div>`+['queue','schemas','releases','audit'].map(item).join('');
+  $('#prog').innerHTML=`<option value="all">All programmes</option>`+Object.entries(PROGS).map(([k,v])=>`<option value="${k}" ${k===S.prog?'selected':''}>${v.name}</option>`).join('');
+  const m=me();
+  $('#ucard').innerHTML=`<div class="urow"><div class="av">${esc(m.name.split(' ').map(w=>w[0]).slice(0,2).join(''))}</div><div><b>${esc(m.name)}</b><small>@${esc(m.name.split(' ').pop().toLowerCase())}</small></div></div><div>Role: <span class="chip ok">${esc(m.role)}</span></div><button class="signout" type="button">Sign Out / Logout</button><label class="who" style="white-space:normal">Switch role (demo)<select id="persona" aria-label="Switch role">${Object.entries(PEOPLE).map(([k,p])=>`<option value="${k}" ${k===S.me?'selected':''}>${p.role}</option>`).join('')}</select></label>`;
+  const [t,sub]=TITLES[S.route];
+  const act=S.route==='terminology'?`<div class="menuwrap"><button class="btn pri" data-menu="addmenu" aria-haspopup="true" ${m.author?'':'disabled title="Only requesters and terminology specialists can add terminology"'}>+ Add Terminology</button><div class="menu" id="addmenu" hidden><button data-new="code">New local code<small>With its standard mapping</small></button><button data-new="vs">New ValueSet<small>An explicit list of codes</small></button><button data-new="cs">New code system<small>A source system's own codes</small></button></div></div>`:S.route==='kpis'?`<button class="btn pri" data-new="kpi" ${m.author?'':'disabled title="Only requesters and terminology specialists can add"'}>+ Add KPI</button>`:S.route==='elements'?`<button class="btn pri" data-new="el" ${m.author?'':'disabled title="Only requesters and terminology specialists can add"'}>+ Add Data Element</button>`:S.route==='schemas'?`<button class="btn pri" data-new="ds" ${m.author?'':'disabled title="Only requesters and terminology specialists can add"'}>+ Add Schema</button>`:'';
+  const body=({catalogue:rCatalogue,queue:rQueue,terminology:rTerm,kpis:rKpis,elements:rEls,schemas:rSchemas,releases:rRel,audit:rAudit})[S.route]();
+  $('#main').innerHTML=`<div class="note">Proposal mockup with sample data. Use <b>Show what changed</b> to see each change against the current screens.</div><nav class="crumb" aria-label="Breadcrumb">Home › ${esc(t)}</nav><section class="hero"><div class="hicon">${svg(S.route,26)}</div><div class="htxt"><h1>${esc(t)}</h1><p>${esc(sub)}</p></div><div class="hact">${act}</div></section>`+body;
+  annotate();
+}
+
+/* ----- cards ----- */
+function mapBox(c){
+  if(!c.target)return `<div class="mapbox"><span class="ml">MAPS TO</span><div><span class="chip warn">No standard target yet</span></div><div class="dim">Records load as terminology-unresolved until a mapping is approved.</div></div>`;
+  const r=lookup(c.target.sys,c.target.code);
+  return `<div class="mapbox"><span class="ml">MAPS TO</span><div>${sysChip(c.target.sys)} <b class="mono">${esc(c.target.code)}</b> <span class="chip ${c.equiv&&EQUIV[c.equiv].auto?'ok':'warn'}">${c.equiv?EQUIV[c.equiv].l:''}</span></div><div class="dim">${esc(r?r.display:'')}</div></div>`;
+}
+function codeCard(c,unm){
+  return `<div class="card" data-open="${keyOf(c)}" tabindex="0" role="button"><div class="cardtop"><span class="codechip">${esc(c.id)}</span>${chip(c.status)}</div><h3>${esc(c.display)}</h3>${mapBox(c)}${c.clin?'<div><span class="chip warn">Clinician review</span></div>':''}<div class="cardfoot"><span>v${c.version} · ${esc(c.system)}${pchip(c)}</span>${unm?`<button class="btn" data-map="${c.id}" ${me().author?'':'disabled'}>Map now</button>`:pips(c)}</div></div>`;
+}
+function rTerm(){
+  const top=S.tabs.terminology,sub=S.tabs.treg,m=me();
+  const nReg=DB.code.filter(inProg).length+DB.vs.filter(inProg).length+DB.cs.filter(inProg).length;
+  const tabs=`<div class="tabs" role="tablist"><button role="tab" aria-selected="${top==='reg'}" data-ttab="reg">NDD Terminology Registry<span class="n">${nReg}</span></button><button role="tab" aria-selected="${top==='ref'}" data-ttab="ref">Reference Terminology <span class="dot" title="Connected"></span></button></div>`;
+  if(top==='ref')return tabs+refView();
+  const un=DB.code.filter(inProg).filter(c=>!c.target);
+  const segs=[['codes','Local codes',DB.code.filter(inProg).length],['unmapped','Unmapped',un.length],['vs','ValueSets',DB.vs.filter(inProg).length],['cs','Code systems',DB.cs.filter(inProg).length]];
+  let body='';
+  if(sub==='codes'||sub==='unmapped'){
+    let list=sub==='unmapped'?un:DB.code.filter(inProg);
+    if(S.q)list=list.filter(c=>(c.id+c.display).toLowerCase().includes(S.q.toLowerCase()));
+    if(sub==='codes'&&S.stat!=='all')list=list.filter(c=>c.status===S.stat);
+    if(sub==='codes'&&S.sysf!=='all')list=list.filter(c=>S.sysf==='none'?!c.target:(c.target&&c.target.sys===S.sysf));
+    body=`<div class="bar"><input type="text" id="q" placeholder="Search local code or name" value="${esc(S.q)}" aria-label="Search">${sub==='codes'?`<select id="stat" aria-label="Status"><option value="all">All statuses</option>${Object.keys(STATUS).map(s=>`<option value="${s}" ${S.stat===s?'selected':''}>${STATUS[s][0]}</option>`).join('')}</select><select id="sysf" aria-label="Standard system"><option value="all">All standard systems</option>${Object.entries(SYS).map(([k,v])=>`<option value="${k}" ${S.sysf===k?'selected':''}>${v.label}</option>`).join('')}<option value="none" ${S.sysf==='none'?'selected':''}>No standard target</option></select>`:''}</div>`+
+      (sub==='unmapped'?`<p class="lede">These codes have no standard equivalent yet. Their records load as terminology-unresolved until a mapping is approved.</p>`:'')+
+      (list.length?`<div class="grid">${list.map(c=>codeCard(c,sub==='unmapped')).join('')}</div>`:`<div class="tw"><div class="empty">No codes match.</div></div>`);
+  }
+  if(sub==='vs'){
+    body=`<p class="lede">ValueSets list their codes one by one. They do not use filters or hierarchy, because GPS has none.</p><div class="grid">`+DB.vs.filter(inProg).map(v=>{const u=usedBy(v.id);return `<div class="card" data-open="${keyOf(v)}" tabindex="0" role="button"><div class="cardtop"><span class="codechip">${esc(v.id)}</span>${chip(v.status)}</div><h3>${esc(v.title)}</h3><div class="mapbox"><span class="ml">MEMBERS</span><div>${v.members.length?v.members.length+(v.members.length===1?' explicit code':' explicit codes'):'<span class="chip bad">No codes</span>'}</div><div class="dim">Used by ${u.kpis.length} KPI${u.kpis.length===1?'':'s'} and ${u.els.length} element${u.els.length===1?'':'s'}</div></div><div class="cardfoot"><span>v${v.version}${pchip(v)}</span>${pips(v)}</div></div>`}).join('')+'</div>';
+  }
+  if(sub==='cs'){
+    body=`<p class="lede">A local code system is the list of codes one source system uses. Every local code belongs to one.</p><div class="grid">`+DB.cs.filter(inProg).map(c=>`<div class="card" data-open="${keyOf(c)}" tabindex="0" role="button"><div class="cardtop"><span class="codechip">${esc(c.id)}</span>${chip(c.status)}</div><h3>${esc(c.title)}</h3><div class="mapbox"><span class="ml">MAINTAINED BY</span><div>${esc(c.owner)}</div><div class="dim">${DB.code.filter(x=>x.system===c.id).length} local codes</div></div><div class="cardfoot"><span>v${c.version}${pchip(c)}</span>${pips(c)}</div></div>`).join('')+'</div>';
+  }
+  return tabs+`<div class="seg" role="tablist">${segs.map(([k,l,n])=>`<button role="tab" aria-selected="${sub===k}" data-tsub="${k}">${l}<span class="n">${n}</span></button>`).join('')}</div>`+body;
+}
+function refResults(){
+  const q=(S.rq||'').toLowerCase(),sys=S.rsys||'all';
+  const rs=REF.filter(r=>(sys==='all'||r.sys===sys)&&(!q||(r.code+' '+r.display).toLowerCase().includes(q))).slice(0,18);
+  return rs.length?`<div class="grid">${rs.map(r=>`<div class="card static"><div class="cardtop">${sysChip(r.sys)}${r.active?'<span class="chip ok">Active</span>':'<span class="chip bad">Inactive</span>'}</div><h3 class="mono">${esc(r.code)}</h3><div>${esc(r.display)}</div><div class="cardfoot"><span>Read only</span><button class="btn" data-usemap="${r.sys}|${esc(r.code)}" ${r.active&&me().author?'':'disabled'}>Use in a mapping</button></div></div>`).join('')}</div>`:`<div class="tw"><div class="empty">No match on the country terminology server.</div></div>`;
+}
+function refView(){
+  return `<div class="refbar"><b><span class="dot"></span> Country terminology server</b><span class="dim">Connected. Read only. The NDD keeps a reference to a code and its system, never a copy.</span><span class="sp"></span>${Object.values(SYS).map(x=>`<span class="sys">${x.short}</span>`).join(' ')}<span class="chip muted">ICD-11 not enabled</span></div><div class="bar"><input type="text" id="rq" placeholder="Search a standard code or name" value="${esc(S.rq)}" aria-label="Search standard codes"><select id="rsys" aria-label="System"><option value="all">All systems</option>${Object.entries(SYS).map(([k,v])=>`<option value="${k}" ${S.rsys===k?'selected':''}>${v.label}</option>`).join('')}</select></div><div id="rres">${refResults()}</div>`;
+}
+function rKpis(){
+  const m=me(),add=m.author?'':'disabled title="Only requesters and terminology specialists can create KPIs"';
+  const list=DB.kpi.filter(inProg);
+  return `<div class="bar"><span class="dim">Facility comes from the facility registry and is not part of the KPI rule.</span><span class="sp"></span><button class="btn pri" data-new="kpi" ${add}>New KPI</button></div><div class="grid">`+list.map(k=>`<div class="card" data-open="${keyOf(k)}" tabindex="0" role="button"><div class="cardtop"><span class="codechip">${k.id}</span>${chip(k.status)}</div><h3>${esc(k.title)}</h3><div class="mapbox"><span class="ml">RULE</span><div>${ruleText(k.numer)}</div><div class="dim">out of</div><div>${ruleText(k.denom)}</div></div><div class="cardfoot"><span>v${k.version} · ${k.dims.map(d=>dimLabel[d]).join(', ')}${pchip(k)}</span>${k.sync?(k.sync.ver===k.version?'<span class="chip ok">DHIS2 in sync</span>':'<span class="chip warn">DHIS2 behind</span>'):'<span class="chip muted">Not in DHIS2</span>'}</div></div>`).join('')+'</div>';
+}
+function rEls(){
+  const m=me(),add=m.author?'':'disabled title="Only requesters and terminology specialists can add elements"';
+  return `<div class="bar"><span class="sp"></span><button class="btn pri" data-new="el" ${add}>New data element</button></div><div class="grid">`+DB.el.filter(inProg).map(e=>`<div class="card" data-open="${keyOf(e)}" tabindex="0" role="button"><div class="cardtop"><span class="codechip">${e.id}</span>${chip(e.status)}</div><h3>${esc(e.title)}</h3><div class="mapbox"><span class="ml">SOURCE</span><div>${esc(srcLabel(e))}</div><div class="dim mono">${esc(fhirTxt(e))}</div><div class="dim">${e.type}, ${e.card}</div><div>${e.vs?`Bound to <span class="mono">${e.vs}</span> (${e.strength})`:(e.type==='code'?'<span class="chip bad">No ValueSet bound</span>':'<span class="dim">No binding needed</span>')}</div></div><div class="cardfoot"><span>v${e.version} · ${e.sens}${pchip(e)}</span></div></div>`).join('')+'</div>';
+}
+function catList(){
+  const q=(S.cq||'').toLowerCase();
+  const items=all().filter(i=>i.status==='published'&&inProg(i)&&['kpi','el','vs','code'].includes(i.kind)&&(S.ctype==='all'||i.kind===S.ctype)&&(!q||(i.id+' '+(i.title||i.display||'')).toLowerCase().includes(q)));
+  const line=i=>i.kind==='kpi'?esc(i.definition):i.kind==='el'?esc(i.def):i.kind==='vs'?i.members.length+(i.members.length===1?' explicit code':' explicit codes'):esc(i.display)+(i.target?' → '+SYS[i.target.sys].short+' '+esc(i.target.code):'');
+  return items.length?`<div class="grid">${items.map(i=>`<div class="card" data-open="${keyOf(i)}" tabindex="0" role="button"><div class="cardtop"><span class="kind">${KIND[i.kind]}</span><span class="chip solid">v${i.version}</span></div><h3>${esc(i.kind==='code'?i.id:(i.title||i.id))}</h3><div class="dim">${line(i)}</div><div class="cardfoot"><span class="mono">${esc(i.id)}</span><span>${esc(progName(i.prog))}</span></div></div>`).join('')}</div>`:`<div class="tw"><div class="empty">Nothing released matches.</div></div>`;
+}
+function rCatalogue(){
+  const types=[['all','All'],['kpi','KPIs'],['el','Data elements'],['vs','ValueSets'],['code','Local codes']];
+  return `<div class="bar"><input type="text" id="cq" placeholder="Search released definitions" value="${esc(S.cq)}" aria-label="Search catalogue"></div><div class="seg" role="tablist">${types.map(([k,l])=>`<button role="tab" aria-selected="${S.ctype===k}" data-ctype="${k}">${l}</button>`).join('')}</div><div id="catres">${catList()}</div>`;
+}
+
+/* ----- change markers and legend ----- */
+const CHG=[
+ ['Governance group','Only the four registers.','Adds Review Queue, Schemas, Releases and Audit Log.','The SoR needs proposal, review, approval and release tag, with traceability.'],
+ ['Reference tab','"FHIR Terminology Browser (HAPI FHIR R4)" with server URL, auth client, API paths and copies of SNOMED and ICD-11.','"Reference Terminology": read-only lookup on the country server. No copies, no connection details.','Standard terminologies belong to the country server. Keeping no copies means one source of truth.'],
+ ['Registry sections','ConceptMaps, Concepts & Codes, CodeSystems, ValueSets (FHIR resource names).','Local codes, Unmapped, ValueSets, Code systems.','Users think in codes and mappings, not FHIR resources.'],
+ ['Mapping display','"Mapped to [C50.9] … via ConceptMap [undefined]" under a code used as the title.','Name as the title, then a Maps-to box with system, full code, name and equivalence.','Fixes the undefined bug and the truncated codes.'],
+ ['Status','ACTIVE on a draft mapping.','A governance state: Draft, Submitted, In review, Approved, Published.','ACTIVE hid that the mapping still needed clinician review.'],
+ ['Add menu','One "Add Terminology" button and one form.','Menu: local code, ValueSet, code system.','Each has different fields and a different reviewer question.'],
+ ['Local code system','Domain dropdown with one value, "HEALTH".','A real code system list with "+ New code system" inline.','A local code has no meaning without the system that owns it.'],
+ ['Standard code lookup','Typed code "1435" and a hand-typed display.','Search on the country server. Name is read-only. Inactive codes cannot be chosen.','1435 is not a valid SNOMED ID. Typed targets cause silent errors.'],
+ ['Equivalence','Defaults to "equal".','No default. A line shows what ETL will do with the choice.','ETL applies equal and wider automatically, so a lazy default becomes a silent error.'],
+ ['Reason and review','Description only.','A required reason, plus "needs clinician review".','Reviewers need the why. Diagnosis mappings need clinical sign-off.'],
+ ['Save','"Save Mapping Entry".','Save draft, or Submit for review.','Nothing reaches ETL without review.'],
+ ['ValueSets','Expand ValueSet ($expand), no version, no usage.','Explicit code list, version, member count and what uses it. No $expand.','GPS has no hierarchy, so expansion rules cannot run.'],
+ ['Role','A "Requester" badge only.','The role decides what you can do. Reviewers cannot approve their own work.','Separation of duties.'],
+ ['Git workflow','Not shown. Governance looks like an in-app approval.','Each change is a branch and pull request on a YAML file. Review is the pull request review, validation is CI, publishing is merge plus a release tag.','The SoR says: Git repository with YAML or JSON files, proposal, review, approval, merge, release tag, mandatory PR review and automated validation.'],
+ ['Review panel','No review step on screen.','Lifecycle bar, automatic checks, two approvals, discussion, and what it feeds.','Gives reviewers what they need to decide.']
+];
+function annotate(){
+  document.querySelectorAll('[data-chg]').forEach(e=>e.removeAttribute('data-chg'));
+  const m=(sel,n)=>{const e=document.querySelector(sel);if(e)e.setAttribute('data-chg',n)};
+  m('#nav [data-go="queue"]',1);m('[data-ttab="ref"]',2);m('[data-tsub="codes"]',3);m('.grid .card .mapbox',4);m('.grid .card .cardtop .chip',5);m('[data-menu="addmenu"]',6);
+  if(S.tabs.treg==='vs')m('.grid .card .mapbox',12);
+  m('.ucard',13);
+  m('[data-fr="f-sys"]',7);m('[data-fr="f-search"]',8);m('[data-fr="f-equiv"]',9);m('[data-fr="f-reason"]',10);m('[data-save="draft"]',11);
+  m('.drawer .steps',15);document.querySelectorAll('.drawer .sec').forEach(x=>{const h=x.querySelector('h4');if(h&&h.textContent==='Git')x.setAttribute('data-chg',14)});
+}
+function legend(){
+  const L=$('#legend');L.innerHTML=`<h2>What changed <button class="x" id="lclose" aria-label="Close">×</button></h2><p class="dim" style="margin:0">Numbers match the dashed markers on the screens. Open Add Terminology to see 6 to 11, and any card for 14 and 15.</p><ol>${CHG.map((c,i)=>`<li><span class="num">${i+1}</span><div><b>${c[0]}</b><div class="ba"><span>Before</span><span style="font-weight:400;color:var(--ink)">${c[1]}</span></div><div class="ba"><span>After</span><span style="font-weight:400;color:var(--ink)">${c[2]}</span></div><div class="why">${c[3]}</div></div></li>`).join('')}</ol>`;
+}
+function setAnnot(on){document.body.classList.toggle('annot',on);$('#annot').setAttribute('aria-pressed',on?'true':'false');$('#legend').hidden=!on;if(on)legend()}
+
+/* ----- extra events ----- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-tsub],[data-menu],[data-usemap],[data-ctype],#annot,#theme,#collapse,#lclose');
+  const menu=$('#addmenu');
+  if(menu&&!e.target.closest('.menuwrap'))menu.hidden=true;
+  if(!t)return;const d=t.dataset;
+  if(d.tsub){S.tabs.treg=d.tsub;S.q='';render()}
+  else if(d.menu){const mm=$('#'+d.menu);if(mm)mm.hidden=!mm.hidden}
+  else if(d.usemap){const [sy,cd]=d.usemap.split('|');openMapForm(null);MF.tsys=sy;document.getElementById('f-tsys').value=sy;MF.picked={sys:sy,code:cd};mapDyn();document.getElementById('f-results').innerHTML=''}
+  else if(d.ctype){S.ctype=d.ctype;render()}
+  else if(t.id==='annot')setAnnot(!document.body.classList.contains('annot'));
+  else if(t.id==='lclose')setAnnot(false);
+  else if(t.id==='theme'){try{const r=document.documentElement;const dark=r.getAttribute('data-theme')?r.getAttribute('data-theme')==='dark':matchMedia('(prefers-color-scheme: dark)').matches;r.setAttribute('data-theme',dark?'light':'dark')}catch(_){}}
+  else if(t.id==='collapse'){$('#gbody').classList.toggle('mini')}
+});
+document.addEventListener('click',e=>{if(e.target.closest('#addmenu [data-new]')){const m=$('#addmenu');if(m)m.hidden=true}},true);
+document.addEventListener('input',e=>{
+  if(e.target.id==='rq'){S.rq=e.target.value;$('#rres').innerHTML=refResults()}
+  if(e.target.id==='cq'){S.cq=e.target.value;$('#catres').innerHTML=catList()}
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='rsys'){S.rsys=e.target.value;$('#rres').innerHTML=refResults()}
+  if(e.target.id==='sysf'){S.sysf=e.target.value;render()}
+});
+document.addEventListener('input',e=>{if(e.target.id&&e.target.id.startsWith('g-'))d2update()});
+document.addEventListener('change',e=>{if(e.target.id&&e.target.id.startsWith('g-'))d2update()});
+new MutationObserver(()=>annotate()).observe($('#layer'),{childList:true,subtree:true});
+(function init(){const h=(location.hash||'').slice(1);if(ROUTES.some(r=>r[0]===h))S.route=h;render()})();
+</script>
